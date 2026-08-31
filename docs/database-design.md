@@ -94,3 +94,46 @@ Fields:
 - day_of_week
 - start_time
 - end_time
+## Relationships
+
+### User → Patient
+
+One user can have one patient profile.
+
+Users.id → Patients.user_id
+
+### User → Doctor
+
+One user can have one doctor profile.
+
+Users.id → Doctors.user_id
+
+### Department → Doctor
+
+One department can have many doctors.
+
+Departments.id → Doctors.department_id
+
+### Patient → Appointment
+
+One patient can have many appointments.
+
+Patients.id → Appointments.patient_id
+
+### Doctor → Appointment
+
+One doctor can have many appointments.
+
+Doctors.id → Appointments.doctor_id
+
+### Appointment → Queue
+
+One appointment can have one queue entry.
+
+Appointments.id → Queues.appointment_id
+
+### Doctor → Schedule
+
+One doctor can have many schedule entries.
+
+Doctors.id → Schedules.doctor_id
