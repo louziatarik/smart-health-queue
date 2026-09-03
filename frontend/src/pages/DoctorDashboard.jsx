@@ -461,12 +461,15 @@ function DoctorDashboard() {
                     {currentPatient ? (
                       <>
                         <strong>
-                          Queue #{currentPatient.queue_number}
-                        </strong>
+  {currentPatient.patient_name ||
+    "Unknown Patient"}
+</strong>
 
-                        <small>
-                          Appointment #{currentPatient.appointment_id}
-                        </small>
+<small>
+  Queue #{currentPatient.queue_number}
+  {" • "}
+  Appointment #{currentPatient.appointment_id}
+</small>
 
                         <span className="current-status">
                           {currentPatient.status}
@@ -537,19 +540,21 @@ function DoctorDashboard() {
 
                         <div className="queue-patient-info">
 
-                          <strong>
-                            Queue #{item.queue_number}
-                          </strong>
+ <strong>
+  {item.patient_name || "Unknown Patient"}
+</strong>
 
-                          <span>
-                            Appointment #{item.appointment_id}
-                          </span>
+<span>
+  Queue #{item.queue_number}
+  {" • "}
+  Appointment #{item.appointment_id}
+</span>
 
-                          <small>
-                            {item.appointment_date}
-                            {" • "}
-                            {item.appointment_time}
-                          </small>
+<small>
+  {item.appointment_date}
+  {" • "}
+  {item.appointment_time}
+</small>
 
                         </div>
 
@@ -680,17 +685,16 @@ function DoctorDashboard() {
 
                           <div>
                             <strong>
-                              Patient #
-                              {appointment.patient_id ||
-                                "—"}
-                            </strong>
+  {appointment.patient_name ||
+    "Unknown Patient"}
+</strong>
 
-                            <span>
-                              Appointment #
-                              {appointment.id ||
-                                appointment.appointment_id ||
-                                "—"}
-                            </span>
+<span>
+  Appointment #
+  {appointment.id ||
+    appointment.appointment_id ||
+    "—"}
+</span>
                           </div>
 
                           <span className="appointment-status">

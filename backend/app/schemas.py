@@ -1,18 +1,8 @@
-from datetime import date
 from pydantic import BaseModel, EmailStr
-from pydantic import BaseModel
-from pydantic import BaseModel
 
-class DoctorResponse(BaseModel):
-    id: int
-    name: str
-    email: str
-    specialization: str
-    department: str
-    available: int
 
 # ============================================================
-# PATIENT
+# PATIENT REGISTRATION
 # ============================================================
 
 class PatientRegister(BaseModel):
@@ -20,8 +10,12 @@ class PatientRegister(BaseModel):
     email: EmailStr
     password: str
     phone: str
-    date_of_birth: date
+    date_of_birth: str
 
+
+# ============================================================
+# PATIENT LOGIN
+# ============================================================
 
 class PatientLogin(BaseModel):
     email: EmailStr
@@ -29,7 +23,7 @@ class PatientLogin(BaseModel):
 
 
 # ============================================================
-# DOCTOR
+# DOCTOR REGISTRATION
 # ============================================================
 
 class DoctorRegister(BaseModel):
@@ -41,7 +35,7 @@ class DoctorRegister(BaseModel):
 
 
 # ============================================================
-# APPOINTMENTS
+# APPOINTMENT CREATION
 # ============================================================
 
 class AppointmentCreate(BaseModel):
@@ -50,13 +44,31 @@ class AppointmentCreate(BaseModel):
     appointment_time: str
 
 
+# ============================================================
+# APPOINTMENT RESPONSE
+# ============================================================
+
 class AppointmentResponse(BaseModel):
     id: int
     patient_id: int
     doctor_id: int
+    patient_name: str
     appointment_date: str
     appointment_time: str
     status: str
 
     class Config:
         from_attributes = True
+
+
+# ============================================================
+# DOCTOR RESPONSE
+# ============================================================
+
+class DoctorResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    specialization: str
+    department: str
+    available: int

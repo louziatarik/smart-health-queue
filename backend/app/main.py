@@ -56,12 +56,17 @@ app.add_middleware(
 # ============================================================
 
 password_hash = PasswordHash.recommended()
-security = HTTPBearer()# ============================================================
+security = HTTPBearer()
+
+
+# ============================================================
 # DOCTORS
 # ============================================================
 
 @app.get("/doctors", response_model=list[DoctorResponse])
-def get_doctors(db: Session = Depends(get_db)):
+def get_doctors(
+    db: Session = Depends(get_db)
+):
     doctors = db.query(models.Doctor).all()
 
     return [
@@ -392,14 +397,12 @@ def create_appointment(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Only patients can create appointments
     if current_user.role != "PATIENT":
         raise HTTPException(
             status_code=403,
             detail="Only patients can create appointments"
         )
 
-    # Find patient
     patient = db.query(models.Patient).filter(
         models.Patient.user_id == current_user.id
     ).first()
@@ -410,7 +413,6 @@ def create_appointment(
             detail="Patient profile not found"
         )
 
-    # Check doctor
     doctor = db.query(models.Doctor).filter(
         models.Doctor.id == appointment_data.doctor_id
     ).first()
@@ -427,7 +429,6 @@ def create_appointment(
             detail="Doctor is not currently available"
         )
 
-    # Check if same doctor already has this time booked
     existing_appointment = db.query(
         models.Appointment
     ).filter(
@@ -443,7 +444,6 @@ def create_appointment(
             detail="This appointment time is already booked"
         )
 
-    # Create appointment
     appointment = models.Appointment(
         patient_id=patient.id,
         doctor_id=appointment_data.doctor_id,
@@ -484,7 +484,16 @@ def create_appointment(
     db.add(queue)
     db.commit()
 
-    return appointment
+    # The response model expects patient_name.
+    return {
+        "id": appointment.id,
+        "patient_id": appointment.patient_id,
+        "doctor_id": appointment.doctor_id,
+        "patient_name": current_user.name,
+        "appointment_date": appointment.appointment_date,
+        "appointment_time": appointment.appointment_time,
+        "status": appointment.status
+    }
 
 
 # ============================================================
@@ -524,7 +533,18 @@ def get_my_appointments(
         models.Appointment.appointment_time.asc()
     ).all()
 
-    return appointments
+    return [
+        {
+            "id": appointment.id,
+            "patient_id": appointment.patient_id,
+            "doctor_id": appointment.doctor_id,
+            "patient_name": current_user.name,
+            "appointment_date": appointment.appointment_date,
+            "appointment_time": appointment.appointment_time,
+            "status": appointment.status
+        }
+        for appointment in appointments
+    ]
 
 
 # ============================================================
@@ -564,7 +584,23 @@ def get_doctor_appointments(
         models.Appointment.appointment_time.asc()
     ).all()
 
-    return appointments
+    return [
+        {
+            "id": appointment.id,
+            "patient_id": appointment.patient_id,
+            "doctor_id": appointment.doctor_id,
+            "patient_name": (
+                appointment.patient.user.name
+                if appointment.patient
+                and appointment.patient.user
+                else "Unknown Patient"
+            ),
+            "appointment_date": appointment.appointment_date,
+            "appointment_time": appointment.appointment_time,
+            "status": appointment.status
+        }
+        for appointment in appointments
+    ]
 
 
 # ============================================================
@@ -625,7 +661,20 @@ def confirm_appointment(
     db.commit()
     db.refresh(appointment)
 
-    return appointment
+    return {
+        "id": appointment.id,
+        "patient_id": appointment.patient_id,
+        "doctor_id": appointment.doctor_id,
+        "patient_name": (
+            appointment.patient.user.name
+            if appointment.patient
+            and appointment.patient.user
+            else "Unknown Patient"
+        ),
+        "appointment_date": appointment.appointment_date,
+        "appointment_time": appointment.appointment_time,
+        "status": appointment.status
+    }
 
 
 # ============================================================
@@ -653,7 +702,6 @@ def cancel_appointment(
             detail="Appointment not found"
         )
 
-    # Patient can cancel their own appointment
     if current_user.role == "PATIENT":
 
         patient = db.query(models.Patient).filter(
@@ -666,7 +714,6 @@ def cancel_appointment(
                 detail="You can only cancel your own appointments"
             )
 
-    # Doctor can cancel their own appointments
     elif current_user.role == "DOCTOR":
 
         doctor = db.query(models.Doctor).filter(
@@ -687,7 +734,6 @@ def cancel_appointment(
 
     appointment.status = "CANCELLED"
 
-    # Also remove appointment from active waiting queue
     queue = db.query(models.Queue).filter(
         models.Queue.appointment_id == appointment.id
     ).first()
@@ -698,7 +744,20 @@ def cancel_appointment(
     db.commit()
     db.refresh(appointment)
 
-    return appointment
+    return {
+        "id": appointment.id,
+        "patient_id": appointment.patient_id,
+        "doctor_id": appointment.doctor_id,
+        "patient_name": (
+            appointment.patient.user.name
+            if appointment.patient
+            and appointment.patient.user
+            else "Unknown Patient"
+        ),
+        "appointment_date": appointment.appointment_date,
+        "appointment_time": appointment.appointment_time,
+        "status": appointment.status
+    }
 
 
 # ============================================================
@@ -779,6 +838,7 @@ def get_my_queue(
         "appointment_time": appointment.appointment_time
     }
 
+
 # ============================================================
 # GET DOCTOR QUEUE
 # ============================================================
@@ -809,7 +869,9 @@ def get_doctor_queue(
         .join(models.Appointment)
         .filter(
             models.Appointment.doctor_id == doctor.id,
-            models.Queue.status == "WAITING"
+            models.Queue.status.in_(
+                ["WAITING", "CALLED", "IN_PROGRESS"]
+            )
         )
         .order_by(
             models.Queue.queue_number.asc()
@@ -821,6 +883,13 @@ def get_doctor_queue(
         {
             "queue_id": queue.id,
             "appointment_id": queue.appointment_id,
+            "patient_id": queue.appointment.patient_id,
+            "patient_name": (
+                queue.appointment.patient.user.name
+                if queue.appointment.patient
+                and queue.appointment.patient.user
+                else "Unknown Patient"
+            ),
             "queue_number": queue.queue_number,
             "status": queue.status,
             "appointment_date": queue.appointment.appointment_date,
@@ -828,19 +897,23 @@ def get_doctor_queue(
         }
         for queue in queue_items
     ]
+
+
+# ============================================================
+# CALL NEXT PATIENT
+# ============================================================
+
 @app.put("/queue/doctor/call-next")
 def call_next_patient(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Make sure the logged-in user is a doctor
     if current_user.role != "DOCTOR":
         raise HTTPException(
             status_code=403,
             detail="Only doctors can call the next patient"
         )
 
-    # Find doctor profile
     doctor = db.query(models.Doctor).filter(
         models.Doctor.user_id == current_user.id
     ).first()
@@ -851,7 +924,6 @@ def call_next_patient(
             detail="Doctor profile not found"
         )
 
-    # Find the first waiting patient
     queue_entry = (
         db.query(models.Queue)
         .join(models.Appointment)
@@ -859,7 +931,9 @@ def call_next_patient(
             models.Appointment.doctor_id == doctor.id,
             models.Queue.status == "WAITING"
         )
-        .order_by(models.Queue.queue_number.asc())
+        .order_by(
+            models.Queue.queue_number.asc()
+        )
         .first()
     )
 
@@ -869,7 +943,6 @@ def call_next_patient(
             detail="No patients are waiting"
         )
 
-    # Change status
     queue_entry.status = "CALLED"
 
     db.commit()
@@ -882,6 +955,12 @@ def call_next_patient(
         "queue_number": queue_entry.queue_number,
         "status": queue_entry.status
     }
+
+
+# ============================================================
+# START CONSULTATION
+# ============================================================
+
 @app.put("/queue/doctor/{queue_id}/start")
 def start_consultation(
     queue_id: int,
@@ -938,6 +1017,12 @@ def start_consultation(
         "queue_number": queue_entry.queue_number,
         "status": queue_entry.status
     }
+
+
+# ============================================================
+# COMPLETE CONSULTATION
+# ============================================================
+
 @app.put("/queue/doctor/{queue_id}/complete")
 def complete_consultation(
     queue_id: int,
@@ -984,6 +1069,9 @@ def complete_consultation(
 
     queue_entry.status = "COMPLETED"
 
+    appointment = queue_entry.appointment
+    appointment.status = "COMPLETED"
+
     db.commit()
     db.refresh(queue_entry)
 
@@ -994,6 +1082,12 @@ def complete_consultation(
         "queue_number": queue_entry.queue_number,
         "status": queue_entry.status
     }
+
+
+# ============================================================
+# SKIP PATIENT
+# ============================================================
+
 @app.put("/queue/doctor/{queue_id}/skip")
 def skip_patient(
     queue_id: int,
@@ -1032,7 +1126,10 @@ def skip_patient(
             detail="Queue entry not found"
         )
 
-    if queue_entry.status not in ["WAITING", "CALLED"]:
+    if queue_entry.status not in [
+        "WAITING",
+        "CALLED"
+    ]:
         raise HTTPException(
             status_code=400,
             detail="Only WAITING or CALLED patients can be skipped"
