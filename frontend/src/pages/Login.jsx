@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
@@ -44,11 +45,6 @@ function Login() {
         );
       }
 
-      /*
-        Save the JWT returned by FastAPI.
-        We keep the token in localStorage so it can be used
-        for authenticated API requests later.
-      */
       const token =
         data.access_token ||
         data.token ||
@@ -63,8 +59,6 @@ function Login() {
       localStorage.setItem("smartHealthToken", token);
       localStorage.setItem("smartHealthRole", role);
 
-      // Temporary dashboard routes.
-      // We will create these pages next.
       if (role === "patient") {
         navigate("/patient-dashboard");
       } else {
@@ -84,17 +78,39 @@ function Login() {
 
   return (
     <div className="login-page">
-      {/* =========================================
-          LEFT SIDE
-      ========================================== */}
-      <div className="login-visual">
-        <div className="login-brand">
-          <div className="logo-mark">+</div>
-          <span>Smart Health</span>
+
+      {/* =====================================================
+          BRAND PANEL
+      ===================================================== */}
+
+      <section className="login-brand-panel">
+
+        <div className="login-brand-top">
+
+          <Link to="/" className="login-logo">
+            <span className="login-logo-mark">
+              +
+            </span>
+
+            <span className="login-logo-text">
+              Smart Health
+            </span>
+          </Link>
+
+          <Link
+            to="/"
+            className="login-back-link login-back-desktop"
+          >
+            Back to website
+            <span>↗</span>
+          </Link>
+
         </div>
 
-        <div className="login-visual-content">
-          <span className="section-label">
+
+        <div className="login-brand-content">
+
+          <span className="login-eyebrow">
             SMART HEALTH
           </span>
 
@@ -105,161 +121,294 @@ function Login() {
 
           <p>
             Access your appointments, follow your queue,
-            and stay connected with your healthcare team.
+            and stay connected with your healthcare team
+            through one simple experience.
           </p>
 
-          <div className="login-preview">
-            <div className="login-preview-header">
-              <span>Today's overview</span>
 
-              <span className="preview-live">
-                ● Live
+          {/* PREVIEW */}
+
+          <div className="login-preview-card">
+
+            <div className="login-preview-top">
+
+              <div>
+                <span className="login-preview-label">
+                  TODAY'S OVERVIEW
+                </span>
+
+                <h3>
+                  Your healthcare,
+                  <br />
+                  in one place.
+                </h3>
+              </div>
+
+              <span className="login-preview-live">
+                <span></span>
+                Live
               </span>
+
             </div>
 
-            <div className="login-preview-stat">
-              <div>
-                <small>Next appointment</small>
-                <strong>13:00</strong>
+
+            <div className="login-preview-grid">
+
+              <div className="login-preview-stat">
+
+                <span>
+                  Next appointment
+                </span>
+
+                <strong>
+                  13:00
+                </strong>
+
+                <small>
+                  Appointment scheduled
+                </small>
+
               </div>
 
-              <div className="preview-icon">
-                ◷
+
+              <div className="login-preview-stat">
+
+                <span>
+                  Queue position
+                </span>
+
+                <strong>
+                  #03
+                </strong>
+
+                <small>
+                  2 patients ahead
+                </small>
+
               </div>
+
             </div>
 
-            <div className="login-preview-stat">
-              <div>
-                <small>Queue position</small>
-                <strong>#03</strong>
+
+            <div className="login-preview-progress">
+
+              <div className="login-progress-heading">
+
+                <span>
+                  Queue progress
+                </span>
+
+                <strong>
+                  65%
+                </strong>
+
               </div>
 
-              <div className="preview-icon">
-                #
+              <div className="login-progress-track">
+                <div className="login-progress-fill"></div>
               </div>
+
             </div>
 
-            <div className="preview-progress">
-              <div className="preview-progress-label">
-                <span>Queue progress</span>
-                <span>65%</span>
-              </div>
-
-              <div className="preview-progress-bar">
-                <div></div>
-              </div>
-            </div>
           </div>
+
         </div>
 
-        <div className="login-visual-footer">
+
+        <div className="login-brand-footer">
+
+          <span className="login-footer-dot"></span>
+
           Secure healthcare management
+
         </div>
-      </div>
 
-      {/* =========================================
-          RIGHT SIDE
-      ========================================== */}
-      <div className="login-form-area">
-        <div className="login-form-container">
+      </section>
 
-          <Link to="/" className="login-back">
+
+      {/* =====================================================
+          LOGIN PANEL
+      ===================================================== */}
+
+      <section className="login-form-panel">
+
+        <div className="login-form-wrapper">
+
+          <Link
+            to="/"
+            className="login-back-link login-back-mobile"
+          >
             ← Back to website
           </Link>
 
-          <div className="login-form-heading">
-            <span className="section-label">
+
+          <div className="login-heading">
+
+            <span className="login-eyebrow">
               WELCOME BACK
             </span>
 
-            <h2>Sign in to Smart Health</h2>
+            <h2>
+              Sign in to Smart Health
+            </h2>
 
             <p>
               Enter your credentials to access your account.
             </p>
+
           </div>
 
-          {/* =====================================
+
+          {/* =================================================
               ROLE SELECTOR
-          ====================================== */}
-          <div className="role-selector">
+          ================================================= */}
+
+          <div className="login-role-selector">
+
             <button
               type="button"
               className={
                 role === "patient"
-                  ? "role-button active"
-                  : "role-button"
+                  ? "login-role-button active"
+                  : "login-role-button"
               }
               onClick={() => {
                 setRole("patient");
                 setError("");
               }}
             >
-              <span>♙</span>
-              Patient
+
+              <span className="login-role-icon">
+                ◉
+              </span>
+
+              <span className="login-role-text">
+                <strong>
+                  Patient
+                </strong>
+
+                <small>
+                  Manage your appointments
+                </small>
+              </span>
+
+              {role === "patient" && (
+                <span className="login-role-check">
+                  ✓
+                </span>
+              )}
+
             </button>
+
 
             <button
               type="button"
               className={
                 role === "doctor"
-                  ? "role-button active"
-                  : "role-button"
+                  ? "login-role-button active"
+                  : "login-role-button"
               }
               onClick={() => {
                 setRole("doctor");
                 setError("");
               }}
             >
-              <span>♙</span>
-              Doctor
+
+              <span className="login-role-icon">
+                +
+              </span>
+
+              <span className="login-role-text">
+
+                <strong>
+                  Doctor
+                </strong>
+
+                <small>
+                  Manage your patients
+                </small>
+
+              </span>
+
+              {role === "doctor" && (
+                <span className="login-role-check">
+                  ✓
+                </span>
+              )}
+
             </button>
+
           </div>
 
-          {/* =====================================
-              ERROR MESSAGE
-          ====================================== */}
+
+          {/* =================================================
+              ERROR
+          ================================================= */}
+
           {error && (
-            <div className="login-error">
-              <span>!</span>
-              <p>{error}</p>
+            <div className="login-alert">
+
+              <span className="login-alert-icon">
+                !
+              </span>
+
+              <p>
+                {error}
+              </p>
+
             </div>
           )}
 
-          {/* =====================================
-              LOGIN FORM
-          ====================================== */}
+
+          {/* =================================================
+              FORM
+          ================================================= */}
+
           <form
             className="login-form"
             onSubmit={handleSubmit}
           >
-            <div className="form-group">
+
+            <div className="login-field">
+
               <label htmlFor="email">
                 Email address
               </label>
 
-              <input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
-                autoComplete="email"
-                required
-              />
+              <div className="login-input-wrapper">
+
+                <span className="login-input-icon">
+                  @
+                </span>
+
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) =>
+                    setEmail(event.target.value)
+                  }
+                  autoComplete="email"
+                  required
+                />
+
+              </div>
+
             </div>
 
-            <div className="form-group">
-              <div className="password-label">
+
+            <div className="login-field">
+
+              <div className="login-password-heading">
+
                 <label htmlFor="password">
                   Password
                 </label>
 
                 <button
                   type="button"
-                  className="forgot-password"
+                  className="login-forgot"
                   onClick={() =>
                     setError(
                       "Password recovery will be added later."
@@ -268,31 +417,51 @@ function Login() {
                 >
                   Forgot password?
                 </button>
+
               </div>
 
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
-                autoComplete="current-password"
-                required
-              />
+              <div className="login-input-wrapper">
+
+                <span className="login-input-icon">
+                  •
+                </span>
+
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
+                  autoComplete="current-password"
+                  required
+                />
+
+              </div>
+
             </div>
 
-            <label className="remember-me">
-              <input type="checkbox" />
-              <span>Remember me</span>
+
+            <label className="login-remember">
+
+              <input
+                type="checkbox"
+              />
+
+              <span>
+                Remember me
+              </span>
+
             </label>
+
 
             <button
               type="submit"
-              className="login-submit"
+              className="login-submit-button"
               disabled={loading}
             >
+
               <span>
                 {loading
                   ? "Signing in..."
@@ -303,19 +472,21 @@ function Login() {
                     }`}
               </span>
 
-              <span>
+              <span className="login-submit-arrow">
                 {loading ? "..." : "→"}
               </span>
+
             </button>
+
           </form>
 
-          <div className="login-divider">
-            <span></span>
-            <small>or</small>
-            <span></span>
-          </div>
 
-          <div className="login-register">
+          {/* =================================================
+              REGISTER
+          ================================================= */}
+
+          <div className="login-register-row">
+
             <span>
               Don't have an account?
             </span>
@@ -323,14 +494,26 @@ function Login() {
             <Link to="/register">
               Create account
             </Link>
+
           </div>
 
-          <p className="login-note">
-            Your account information is handled through
-            the Smart Health backend.
-          </p>
+
+          <div className="login-security-note">
+
+            <span>
+              ✓
+            </span>
+
+            <span>
+              Your account information is handled securely.
+            </span>
+
+          </div>
+
         </div>
-      </div>
+
+      </section>
+
     </div>
   );
 }

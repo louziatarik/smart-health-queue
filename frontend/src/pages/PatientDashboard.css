@@ -687,3 +687,50 @@
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(22, 48, 49, 0.15);
 }
+.appointment-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.appointment-cancel-button {
+  padding: 5px 9px;
+  border: 1px solid #ead7d7;
+  border-radius: 20px;
+  background: #fff8f8;
+  color: #9a6262;
+  font-family: inherit;
+  font-size: 7px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.appointment-cancel-button:hover {
+  background: #f8eaea;
+  border-color: #dfc3c3;
+}
+
+.appointment-cancel-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.appointment-department {
+  display: block;
+  margin-top: 4px;
+  color: #9aa7a7;
+  font-size: 7px;
+}
+.table-doctor-name {
+  display: block;
+  color: #536b6b;
+  font-size: 9px;
+}
+
+.table-doctor-specialization {
+  display: block;
+  margin-top: 3px;
+  color: #9aa7a7;
+  font-size: 7px;
+}

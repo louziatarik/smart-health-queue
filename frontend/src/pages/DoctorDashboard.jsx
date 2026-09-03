@@ -162,7 +162,61 @@ function DoctorDashboard() {
       setActionLoading(false);
     }
   };
+const handleConfirmAppointment = async (appointmentId) => {
+  try {
+    setActionLoading(true);
+    setError("");
+    setSuccess("");
 
+    const response = await fetch(
+      `${apiUrl}/appointments/${appointmentId}/confirm`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem("smartHealthToken");
+      localStorage.removeItem("smartHealthRole");
+
+      navigate("/login", {
+        replace: true,
+      });
+
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        typeof data.detail === "string"
+          ? data.detail
+          : "Unable to confirm appointment."
+      );
+    }
+
+    setSuccess("Appointment confirmed successfully.");
+
+    await loadDashboard();
+  } catch (err) {
+    console.error(
+      "Confirm appointment error:",
+      err
+    );
+
+    setError(
+      err.message ||
+        "Unable to confirm appointment."
+    );
+  } finally {
+    setActionLoading(false);
+  }
+};
   const handleCallNext = () => {
     performQueueAction(
       "/queue/doctor/call-next",
@@ -199,7 +253,19 @@ function DoctorDashboard() {
       replace: true,
     });
   };
+const today = new Date().toISOString().split("T")[0];
 
+const todaysAppointments = appointments.filter(
+  (appointment) =>
+    appointment.appointment_date === today
+);
+
+const upcomingAppointments = appointments.filter(
+  (appointment) =>
+    appointment.appointment_date > today &&
+    appointment.status !== "CANCELLED" &&
+    appointment.status !== "COMPLETED"
+);
   const waitingCount = queue.filter(
     (item) => item.status === "WAITING"
   ).length;
@@ -354,15 +420,14 @@ function DoctorDashboard() {
                 </div>
 
                 <div>
-                  <span>
-                    Today's appointments
-                  </span>
+  <span>
+    Today's appointments
+  </span>
 
-                  <strong>
-                    {appointments.length}
-                  </strong>
-                </div>
-
+  <strong>
+    {todaysAppointments.length}
+  </strong>
+</div>
               </div>
 
               <div className="doctor-stat-card">
@@ -646,14 +711,14 @@ function DoctorDashboard() {
                   </div>
 
                   <span className="appointment-count">
-                    {appointments.length}
+                    {todaysAppointments.length}
                   </span>
 
                 </div>
 
                 <div className="doctor-appointment-list">
 
-                  {appointments.length === 0 ? (
+                  {todaysAppointments.length === 0 ? (
                     <div className="queue-empty">
                       <div>◷</div>
 
@@ -666,7 +731,7 @@ function DoctorDashboard() {
                       </span>
                     </div>
                   ) : (
-                    appointments.map(
+                    todaysAppointments.map(
                       (appointment, index) => (
                         <div
                           className="doctor-appointment-row"
@@ -697,10 +762,27 @@ function DoctorDashboard() {
 </span>
                           </div>
 
-                          <span className="appointment-status">
-                            {appointment.status ||
-                              "SCHEDULED"}
-                          </span>
+                          <div className="appointment-actions">
+  <span className="appointment-status">
+    {appointment.status ||
+      "SCHEDULED"}
+  </span>
+
+  {appointment.status === "PENDING" && (
+    <button
+      type="button"
+      className="appointment-confirm-button"
+      onClick={() =>
+        handleConfirmAppointment(
+          appointment.id
+        )
+      }
+      disabled={actionLoading}
+    >
+      Confirm
+    </button>
+  )}
+</div>
 
                         </div>
                       )

@@ -763,3 +763,32 @@
   color: #9aa7a7;
   font-size: 7px;
 }
+.appointment-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.appointment-confirm-button {
+  padding: 5px 9px;
+  border: none;
+  border-radius: 20px;
+  background: #163031;
+  color: white;
+  font-family: inherit;
+  font-size: 7px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.appointment-confirm-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 15px rgba(22, 48, 49, 0.15);
+}
+
+.appointment-confirm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

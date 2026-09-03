@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./Register.css";
 
 function Register() {
   const navigate = useNavigate();
@@ -87,269 +88,490 @@ function Register() {
   };
 
   return (
-    <div className="login-page">
-      {/* LEFT */}
-      <div className="login-visual">
-        <div className="login-brand">
-          <div className="logo-mark">+</div>
-          <span>Smart Health</span>
+    <div className="register-page">
+
+      {/* =====================================================
+          LEFT BRAND PANEL
+      ===================================================== */}
+
+      <section className="register-brand-panel">
+
+        <div className="register-brand-top">
+
+          <Link to="/" className="register-logo">
+            <span className="register-logo-mark">+</span>
+
+            <span className="register-logo-text">
+              Smart Health
+            </span>
+          </Link>
+
+          <Link
+            to="/"
+            className="register-back-link register-back-link-desktop"
+          >
+            Back to website
+            <span>↗</span>
+          </Link>
+
         </div>
 
-        <div className="login-visual-content">
-          <span className="section-label">
+
+        <div className="register-brand-content">
+
+          <span className="register-eyebrow">
             JOIN SMART HEALTH
           </span>
 
           <h1>
-            Healthcare
+            Healthcare,
             <span> made simpler.</span>
           </h1>
 
           <p>
-            Create your Smart Health account and manage
-            appointments and healthcare information from
-            one place.
+            Create your Smart Health account and manage appointments,
+            queue information, and your healthcare journey from one
+            simple platform.
           </p>
 
-          <div className="login-preview">
-            <div className="login-preview-header">
-              <span>Smart Health</span>
-              <span className="preview-live">
-                ● Connected
+
+          <div className="register-preview-card">
+
+            <div className="register-preview-top">
+
+              <div>
+                <span className="register-preview-label">
+                  SMART HEALTH
+                </span>
+
+                <h3>
+                  Your healthcare,
+                  <br />
+                  in one place.
+                </h3>
+              </div>
+
+              <span className="register-preview-live">
+                <span></span>
+                Connected
               </span>
+
             </div>
 
-            <div className="login-preview-stat">
-              <div>
-                <small>Appointments</small>
-                <strong>24/7</strong>
+
+            <div className="register-preview-grid">
+
+              <div className="register-preview-stat">
+
+                <span>Appointments</span>
+
+                <strong>
+                  24/7
+                </strong>
+
+                <small>
+                  Easy scheduling
+                </small>
+
               </div>
 
-              <div className="preview-icon">◷</div>
+
+              <div className="register-preview-stat">
+
+                <span>Queue tracking</span>
+
+                <strong>
+                  LIVE
+                </strong>
+
+                <small>
+                  Stay updated
+                </small>
+
+              </div>
+
             </div>
 
-            <div className="login-preview-stat">
-              <div>
-                <small>Queue tracking</small>
-                <strong>Live</strong>
+
+            <div className="register-preview-flow">
+
+              <div className="register-flow-heading">
+                <span>
+                  Patient journey
+                </span>
+
+                <span>
+                  Simple
+                </span>
               </div>
 
-              <div className="preview-icon">#</div>
+              <div className="register-flow-track">
+                <div className="register-flow-fill"></div>
+              </div>
+
+              <div className="register-flow-steps">
+                <span>Book</span>
+                <span>Track</span>
+                <span>Visit</span>
+              </div>
+
             </div>
 
-            <div className="preview-progress">
-              <div className="preview-progress-label">
-                <span>Healthcare journey</span>
-                <span>Simple</span>
-              </div>
-
-              <div className="preview-progress-bar">
-                <div></div>
-              </div>
-            </div>
           </div>
+
         </div>
 
-        <div className="login-visual-footer">
+
+        <div className="register-brand-footer">
+          <span className="register-footer-dot"></span>
           Secure healthcare management
         </div>
-      </div>
 
-      {/* RIGHT */}
-      <div className="login-form-area">
-        <div className="login-form-container">
+      </section>
 
-          <Link to="/" className="login-back">
+
+      {/* =====================================================
+          FORM PANEL
+      ===================================================== */}
+
+      <section className="register-form-panel">
+
+        <div className="register-form-wrapper">
+
+          <Link
+            to="/"
+            className="register-back-link register-back-link-mobile"
+          >
             ← Back to website
           </Link>
 
-          <div className="login-form-heading">
-            <span className="section-label">
+
+          <div className="register-heading">
+
+            <span className="register-eyebrow">
               CREATE ACCOUNT
             </span>
 
-            <h2>Join Smart Health</h2>
+            <h2>
+              Join Smart Health
+            </h2>
 
             <p>
-              Create your account to start your healthcare
-              journey.
+              Create your account to begin your healthcare journey.
             </p>
+
           </div>
 
-          {/* ROLE */}
-          <div className="role-selector">
+
+          {/* =================================================
+              ROLE SELECTOR
+          ================================================= */}
+
+          <div className="register-role-selector">
+
             <button
               type="button"
               className={
                 role === "patient"
-                  ? "role-button active"
-                  : "role-button"
+                  ? "register-role-button active"
+                  : "register-role-button"
               }
               onClick={() => {
                 setRole("patient");
                 setError("");
               }}
             >
-              <span>♙</span>
-              Patient
+              <span className="register-role-icon">
+                ◉
+              </span>
+
+              <span>
+                <strong>Patient</strong>
+                <small>Manage your care</small>
+              </span>
+
+              {role === "patient" && (
+                <span className="register-role-check">
+                  ✓
+                </span>
+              )}
             </button>
+
 
             <button
               type="button"
               className={
                 role === "doctor"
-                  ? "role-button active"
-                  : "role-button"
+                  ? "register-role-button active"
+                  : "register-role-button"
               }
               onClick={() => {
                 setRole("doctor");
                 setError("");
               }}
             >
-              <span>♙</span>
-              Doctor
+              <span className="register-role-icon">
+                +
+              </span>
+
+              <span>
+                <strong>Doctor</strong>
+                <small>Manage your patients</small>
+              </span>
+
+              {role === "doctor" && (
+                <span className="register-role-check">
+                  ✓
+                </span>
+              )}
             </button>
+
           </div>
 
-          {/* ERROR */}
+
+          {/* =================================================
+              ALERTS
+          ================================================= */}
+
           {error && (
-            <div className="login-error">
-              <span>!</span>
-              <p>{error}</p>
+            <div className="register-alert register-alert-error">
+
+              <span className="register-alert-icon">
+                !
+              </span>
+
+              <p>
+                {error}
+              </p>
+
             </div>
           )}
 
-          {/* SUCCESS */}
+
           {success && (
-            <div className="register-success">
-              <span>✓</span>
-              <p>{success}</p>
+            <div className="register-alert register-alert-success">
+
+              <span className="register-alert-icon">
+                ✓
+              </span>
+
+              <p>
+                {success}
+              </p>
+
             </div>
           )}
 
-          {/* FORM */}
+
+          {/* =================================================
+              FORM
+          ================================================= */}
+
           <form
-            className="login-form"
+            className="register-form"
             onSubmit={handleSubmit}
           >
-            <div className="form-group">
-              <label htmlFor="register-name">
-                Full name
-              </label>
 
-              <input
-                id="register-name"
-                type="text"
-                placeholder="Your full name"
-                value={name}
-                onChange={(event) =>
-                  setName(event.target.value)
-                }
-                required
-              />
+            <div className="register-form-row">
+
+              <div className="register-field">
+
+                <label htmlFor="register-name">
+                  Full name
+                </label>
+
+                <div className="register-input-wrap">
+
+                  <span className="register-input-icon">
+                    ◯
+                  </span>
+
+                  <input
+                    id="register-name"
+                    type="text"
+                    placeholder="Your full name"
+                    value={name}
+                    onChange={(event) =>
+                      setName(event.target.value)
+                    }
+                    required
+                  />
+
+                </div>
+
+              </div>
+
+
+              <div className="register-field">
+
+                <label htmlFor="register-email">
+                  Email address
+                </label>
+
+                <div className="register-input-wrap">
+
+                  <span className="register-input-icon">
+                    @
+                  </span>
+
+                  <input
+                    id="register-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(event.target.value)
+                    }
+                    required
+                  />
+
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="form-group">
-              <label htmlFor="register-email">
-                Email address
-              </label>
 
-              <input
-                id="register-email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
-                required
-              />
+            <div className="register-form-row">
+
+              <div className="register-field">
+
+                <label htmlFor="register-phone">
+                  Phone number
+                </label>
+
+                <div className="register-input-wrap">
+
+                  <span className="register-input-icon">
+                    #
+                  </span>
+
+                  <input
+                    id="register-phone"
+                    type="tel"
+                    placeholder="+212 600000000"
+                    value={phone}
+                    onChange={(event) =>
+                      setPhone(event.target.value)
+                    }
+                    required
+                  />
+
+                </div>
+
+              </div>
+
+
+              <div className="register-field">
+
+                <label htmlFor="register-date">
+                  Date of birth
+                </label>
+
+                <div className="register-input-wrap">
+
+                  <span className="register-input-icon">
+                    ◷
+                  </span>
+
+                  <input
+                    id="register-date"
+                    type="date"
+                    value={dateOfBirth}
+                    onChange={(event) =>
+                      setDateOfBirth(event.target.value)
+                    }
+                    required
+                  />
+
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="form-group">
-              <label htmlFor="register-phone">
-                Phone number
-              </label>
 
-              <input
-                id="register-phone"
-                type="tel"
-                placeholder="+212 600000000"
-                value={phone}
-                onChange={(event) =>
-                  setPhone(event.target.value)
-                }
-                required
-              />
-            </div>
+            <div className="register-field">
 
-            <div className="form-group">
-              <label htmlFor="register-date">
-                Date of birth
-              </label>
-
-              <input
-                id="register-date"
-                type="date"
-                value={dateOfBirth}
-                onChange={(event) =>
-                  setDateOfBirth(event.target.value)
-                }
-                required
-              />
-            </div>
-
-            <div className="form-group">
               <label htmlFor="register-password">
                 Password
               </label>
 
-              <input
-                id="register-password"
-                type="password"
-                placeholder="Create a password"
-                value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
-                minLength={6}
-                required
-              />
+              <div className="register-input-wrap">
+
+                <span className="register-input-icon">
+                  •
+                </span>
+
+                <input
+                  id="register-password"
+                  type="password"
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(event) =>
+                    setPassword(event.target.value)
+                  }
+                  minLength={6}
+                  required
+                />
+
+              </div>
+
+              <small className="register-helper">
+                Use at least 6 characters.
+              </small>
+
             </div>
+
 
             <button
               type="submit"
-              className="login-submit"
+              className="register-submit"
               disabled={loading}
             >
+
               <span>
                 {loading
                   ? "Creating account..."
                   : `Create ${role} account`}
               </span>
 
-              <span>
+              <span className="register-submit-arrow">
                 {loading ? "..." : "→"}
               </span>
+
             </button>
+
           </form>
 
-          <div className="login-divider">
-            <span></span>
-            <small>or</small>
-            <span></span>
-          </div>
 
-          <div className="login-register">
-            <span>Already have an account?</span>
+          <div className="register-login-row">
+
+            <span>
+              Already have an account?
+            </span>
 
             <Link to="/login">
               Sign in
             </Link>
+
+          </div>
+
+
+          <div className="register-security-note">
+
+            <span>✓</span>
+
+            <span>
+              Your information is handled securely.
+            </span>
+
           </div>
 
         </div>
-      </div>
+
+      </section>
+
     </div>
   );
 }

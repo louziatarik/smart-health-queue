@@ -53,9 +53,15 @@ class AppointmentResponse(BaseModel):
     patient_id: int
     doctor_id: int
     patient_name: str
+    doctor_name: str
+    specialization: str
+    department: str
     appointment_date: str
     appointment_time: str
     status: str
+
+    class Config:
+        from_attributes = True
 
     class Config:
         from_attributes = True

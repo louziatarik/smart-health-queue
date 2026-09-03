@@ -144,7 +144,66 @@ function PatientDashboard() {
   /* =========================
      LOGOUT
   ========================== */
+const handleCancelAppointment = async (appointmentId) => {
+  if (!appointmentId) {
+    return;
+  }
 
+  const confirmed = window.confirm(
+    "Are you sure you want to cancel this appointment?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+
+    const response = await fetch(
+      `${apiUrl}/appointments/${appointmentId}/cancel`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem("smartHealthToken");
+      localStorage.removeItem("smartHealthRole");
+
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        typeof data.detail === "string"
+          ? data.detail
+          : "Unable to cancel appointment."
+      );
+    }
+
+    // Reload everything so appointment and queue
+    // information stay synchronized.
+    window.location.reload();
+  } catch (err) {
+    console.error(
+      "Cancel appointment error:",
+      err
+    );
+
+    setError(
+      err.message ||
+        "Unable to cancel the appointment."
+    );
+  }
+};
   const handleLogout = () => {
     localStorage.removeItem("smartHealthToken");
     localStorage.removeItem("smartHealthRole");
@@ -161,10 +220,16 @@ function PatientDashboard() {
   const firstName =
     profile?.name?.split(" ")[0] || "there";
 
-  const nextAppointment =
-    appointments.length > 0
-      ? appointments[0]
-      : null;
+  const upcomingAppointments = appointments.filter(
+  (appointment) =>
+    appointment.status !== "COMPLETED" &&
+    appointment.status !== "CANCELLED"
+);
+
+const nextAppointment =
+  upcomingAppointments.length > 0
+    ? upcomingAppointments[0]
+    : null;
 
   const queueNumber =
     queue?.queue_number ??
@@ -467,18 +532,19 @@ function PatientDashboard() {
                     <div className="appointment-doctor-info">
 
                       <strong>
-                        {nextAppointment.doctor_name ||
-                          `Doctor #${
-                            nextAppointment.doctor_id ||
-                            "—"
-                          }`}
-                      </strong>
+  {nextAppointment.doctor_name ||
+    "Unknown Doctor"}
+</strong>
 
-                      <span>
-                        {nextAppointment.department ||
-                          nextAppointment.specialization ||
-                          "Healthcare appointment"}
-                      </span>
+<span>
+  {nextAppointment.specialization ||
+    "Healthcare appointment"}
+</span>
+
+<small className="appointment-department">
+  {nextAppointment.department ||
+    ""}
+</small>
 
                     </div>
 
@@ -680,22 +746,44 @@ function PatientDashboard() {
                                 "—"}
                             </td>
 
-                            <td>
-                              {appointment.doctor_name ||
-                                `Doctor #${
-                                  appointment.doctor_id ||
-                                  "—"
-                                }`}
-                            </td>
+                           <td>
+  <strong className="table-doctor-name">
+    {appointment.doctor_name ||
+      "Unknown Doctor"}
+  </strong>
 
-                            <td>
+  <small className="table-doctor-specialization">
+    {appointment.specialization ||
+      ""}
+  </small>
+</td>
 
-                              <span className="appointment-status">
-                                {appointment.status ||
-                                  "Scheduled"}
-                              </span>
+                           <td>
+  <div className="appointment-actions">
 
-                            </td>
+    <span className="appointment-status">
+      {appointment.status ||
+        "Scheduled"}
+    </span>
+
+    {appointment.status !== "COMPLETED" &&
+      appointment.status !== "CANCELLED" &&
+      appointment.id && (
+        <button
+          type="button"
+          className="appointment-cancel-button"
+          onClick={() =>
+            handleCancelAppointment(
+              appointment.id
+            )
+          }
+        >
+          Cancel
+        </button>
+      )}
+
+  </div>
+</td>
 
                           </tr>
                         )

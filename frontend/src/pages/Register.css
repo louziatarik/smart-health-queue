@@ -1,0 +1,989 @@
+/* ============================================================
+   SMART HEALTH — REGISTER PAGE
+============================================================ */
+
+.register-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(420px, 0.92fr) minmax(620px, 1.08fr);
+
+  background: #f8fafc;
+  color: #0b1a2b;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ============================================================
+   LEFT BRAND PANEL
+============================================================ */
+
+.register-brand-panel {
+  position: relative;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  padding: 34px 7vw 30px;
+
+  background:
+    radial-gradient(
+      circle at 20% 10%,
+      rgba(79, 139, 201, 0.16),
+      transparent 32%
+    ),
+    linear-gradient(
+      145deg,
+      #142d46 0%,
+      #1f3b5c 55%,
+      #2d4d74 100%
+    );
+
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.register-brand-panel::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.055),
+      transparent 40%
+    );
+
+  pointer-events: none;
+}
+
+.register-brand-panel::after {
+  content: "";
+
+  position: absolute;
+
+  width: 480px;
+  height: 480px;
+
+  right: -270px;
+  bottom: -250px;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 0 0 70px rgba(255, 255, 255, 0.025),
+    0 0 0 140px rgba(255, 255, 255, 0.018);
+
+  pointer-events: none;
+}
+
+
+/* ============================================================
+   BRAND
+============================================================ */
+
+.register-brand-top {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.register-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.register-logo-mark {
+  width: 36px;
+  height: 36px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.17);
+
+  background: rgba(255, 255, 255, 0.08);
+
+  font-size: 21px;
+  font-weight: 700;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.register-logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.register-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #627387;
+  text-decoration: none;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  transition: color 0.2s ease;
+}
+
+.register-back-link:hover {
+  color: #1f3b5c;
+}
+
+.register-back-link-desktop {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.register-back-link-desktop:hover {
+  color: #ffffff;
+}
+
+.register-back-link-mobile {
+  display: none;
+}
+
+
+/* ============================================================
+   BRAND CONTENT
+============================================================ */
+
+.register-brand-content {
+  position: relative;
+  z-index: 2;
+
+  width: min(100%, 570px);
+
+  margin: auto 0;
+}
+
+.register-eyebrow {
+  display: inline-block;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  letter-spacing: 0.18em;
+
+  color: #7e91a5;
+}
+
+.register-brand-panel .register-eyebrow {
+  color: #9fb7cc;
+}
+
+.register-brand-content h1 {
+  margin: 16px 0 19px;
+
+  font-size: clamp(3rem, 5vw, 5rem);
+  line-height: 0.98;
+
+  letter-spacing: -0.065em;
+
+  font-weight: 700;
+}
+
+.register-brand-content h1 span {
+  color: #83b3dc;
+}
+
+.register-brand-content > p {
+  max-width: 520px;
+
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+
+/* ============================================================
+   PREVIEW CARD
+============================================================ */
+
+.register-preview-card {
+  position: relative;
+
+  margin-top: 42px;
+
+  width: min(100%, 500px);
+
+  padding: 23px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.105),
+      rgba(255, 255, 255, 0.045)
+    );
+
+  backdrop-filter: blur(18px);
+
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.register-preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 20px;
+
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.register-preview-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: rgba(255, 255, 255, 0.42);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.16em;
+}
+
+.register-preview-top h3 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 19px;
+  line-height: 1.15;
+
+  letter-spacing: -0.035em;
+}
+
+.register-preview-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 9px;
+
+  border: 1px solid rgba(142, 210, 171, 0.15);
+
+  background: rgba(61, 129, 93, 0.11);
+
+  color: #a9dbbd;
+
+  border-radius: 999px;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.register-preview-live span {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #79c69a;
+
+  box-shadow:
+    0 0 0 4px rgba(121, 198, 154, 0.08);
+}
+
+.register-preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 0;
+
+  margin-top: 20px;
+}
+
+.register-preview-stat {
+  padding-right: 18px;
+}
+
+.register-preview-stat + .register-preview-stat {
+  padding-left: 18px;
+  padding-right: 0;
+
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.register-preview-stat span,
+.register-preview-stat small {
+  display: block;
+}
+
+.register-preview-stat span {
+  color: rgba(255, 255, 255, 0.46);
+
+  font-size: 9px;
+}
+
+.register-preview-stat strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #ffffff;
+
+  font-size: 23px;
+  letter-spacing: -0.045em;
+}
+
+.register-preview-stat small {
+  margin-top: 4px;
+
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 8px;
+}
+
+.register-preview-flow {
+  margin-top: 22px;
+
+  padding-top: 20px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.register-flow-heading {
+  display: flex;
+  justify-content: space-between;
+
+  color: rgba(255, 255, 255, 0.44);
+
+  font-size: 8px;
+}
+
+.register-flow-track {
+  height: 4px;
+
+  margin-top: 10px;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  overflow: hidden;
+}
+
+.register-flow-fill {
+  width: 72%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      #4f8bc9,
+      #83b3dc
+    );
+}
+
+.register-flow-steps {
+  display: flex;
+  justify-content: space-between;
+
+  margin-top: 7px;
+
+  color: rgba(255, 255, 255, 0.35);
+
+  font-size: 7px;
+}
+
+
+/* ============================================================
+   BRAND FOOTER
+============================================================ */
+
+.register-brand-footer {
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  color: rgba(255, 255, 255, 0.38);
+
+  font-size: 9px;
+}
+
+.register-footer-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #83b3dc;
+}
+
+
+/* ============================================================
+   RIGHT FORM PANEL
+============================================================ */
+
+.register-form-panel {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+
+  padding: 48px 7vw;
+
+  background: #f8fafc;
+}
+
+.register-form-wrapper {
+  width: min(100%, 700px);
+  margin: 0 auto;
+}
+
+
+/* ============================================================
+   FORM HEADING
+============================================================ */
+
+.register-heading {
+  margin-top: 34px;
+}
+
+.register-heading h2 {
+  margin: 9px 0 9px;
+
+  color: #0b1a2b;
+
+  font-size: clamp(2rem, 3vw, 2.7rem);
+
+  line-height: 1.05;
+
+  letter-spacing: -0.055em;
+}
+
+.register-heading p {
+  margin: 0;
+
+  max-width: 480px;
+
+  color: #748195;
+
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+
+/* ============================================================
+   ROLE SELECTOR
+============================================================ */
+
+.register-role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin-top: 30px;
+}
+
+.register-role-button {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 66px;
+
+  padding: 13px;
+
+  border: 1px solid #e4e9ef;
+
+  background: #ffffff;
+
+  color: #33445a;
+
+  font-family: inherit;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.register-role-button:hover {
+  transform: translateY(-1px);
+
+  border-color: #cbd9e6;
+
+  box-shadow: 0 10px 25px rgba(31, 59, 92, 0.05);
+}
+
+.register-role-button.active {
+  border-color: #a9c5dd;
+
+  background: #f4f8fc;
+
+  box-shadow:
+    0 10px 27px rgba(31, 59, 92, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.register-role-icon {
+  width: 35px;
+  height: 35px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  border: 1px solid #dce8f2;
+
+  background: #edf4fa;
+
+  color: #2d4d74;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.register-role-button strong,
+.register-role-button small {
+  display: block;
+}
+
+.register-role-button strong {
+  color: #203247;
+
+  font-size: 11px;
+}
+
+.register-role-button small {
+  margin-top: 3px;
+
+  color: #8b97a7;
+
+  font-size: 8px;
+}
+
+.register-role-check {
+  position: absolute;
+
+  top: 10px;
+  right: 10px;
+
+  width: 17px;
+  height: 17px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #1f3b5c;
+  color: #ffffff;
+
+  font-size: 8px;
+}
+
+
+/* ============================================================
+   ALERTS
+============================================================ */
+
+.register-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  margin-top: 16px;
+
+  padding: 11px 12px;
+
+  border: 1px solid;
+}
+
+.register-alert p {
+  margin: 0;
+
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.register-alert-icon {
+  width: 17px;
+  height: 17px;
+
+  display: grid;
+  place-items: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.register-alert-error {
+  border-color: #f2d7d7;
+  background: #fff8f8;
+  color: #a13b3b;
+}
+
+.register-alert-error .register-alert-icon {
+  background: #fceaea;
+}
+
+.register-alert-success {
+  border-color: #d7eadf;
+  background: #f7fcf9;
+  color: #2b7a4b;
+}
+
+.register-alert-success .register-alert-icon {
+  background: #e5f4eb;
+}
+
+
+/* ============================================================
+   FORM
+============================================================ */
+
+.register-form {
+  margin-top: 23px;
+}
+
+.register-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 14px;
+}
+
+.register-field {
+  margin-bottom: 15px;
+}
+
+.register-field label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #304257;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.register-input-wrap {
+  position: relative;
+}
+
+.register-input-icon {
+  position: absolute;
+
+  left: 13px;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  color: #8da0b3;
+
+  font-size: 10px;
+
+  pointer-events: none;
+}
+
+.register-input-wrap input {
+  width: 100%;
+
+  height: 45px;
+
+  padding: 0 13px 0 35px;
+
+  border: 1px solid #e1e7ee;
+
+  background: #ffffff;
+
+  color: #203247;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+
+  font-size: 11px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.register-input-wrap input::placeholder {
+  color: #a4afbc;
+}
+
+.register-input-wrap input:hover {
+  border-color: #d2dce7;
+}
+
+.register-input-wrap input:focus {
+  border-color: #79a7ce;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(79, 139, 201, 0.09);
+}
+
+.register-helper {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #9aa5b2;
+
+  font-size: 8px;
+}
+
+
+/* ============================================================
+   SUBMIT
+============================================================ */
+
+.register-submit {
+  width: 100%;
+
+  height: 47px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  border: 1px solid #1f3b5c;
+
+  background: #1f3b5c;
+
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 24px rgba(31, 59, 92, 0.13);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  background: #142d46;
+
+  box-shadow:
+    0 16px 30px rgba(31, 59, 92, 0.18);
+}
+
+.register-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.register-submit-arrow {
+  font-size: 16px;
+}
+
+
+/* ============================================================
+   BOTTOM
+============================================================ */
+
+.register-login-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 21px;
+
+  color: #8792a0;
+
+  font-size: 9px;
+}
+
+.register-login-row a {
+  color: #1f3b5c;
+
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.register-login-row a:hover {
+  text-decoration: underline;
+}
+
+.register-security-note {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 16px;
+
+  color: #9aa4b1;
+
+  font-size: 8px;
+}
+
+.register-security-note > span:first-child {
+  width: 14px;
+  height: 14px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background: #edf6f0;
+
+  color: #3d815d;
+
+  font-size: 7px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+@media (max-width: 1050px) {
+  .register-page {
+    grid-template-columns: 1fr;
+  }
+
+  .register-brand-panel {
+    min-height: auto;
+
+    padding:
+      26px
+      6vw
+      35px;
+  }
+
+  .register-brand-content {
+    margin-top: 65px;
+    margin-bottom: 35px;
+  }
+
+  .register-brand-footer {
+    display: none;
+  }
+
+  .register-form-panel {
+    min-height: auto;
+  }
+
+  .register-back-link-desktop {
+    display: none;
+  }
+
+  .register-form-wrapper {
+    width: min(100%, 720px);
+  }
+}
+
+@media (max-width: 650px) {
+  .register-brand-panel {
+    padding:
+      22px
+      18px
+      30px;
+  }
+
+  .register-brand-content {
+    margin-top: 48px;
+  }
+
+  .register-brand-content h1 {
+    font-size: 3rem;
+  }
+
+  .register-preview-card {
+    margin-top: 30px;
+  }
+
+  .register-form-panel {
+    padding:
+      35px
+      18px
+      50px;
+  }
+
+  .register-back-link-mobile {
+    display: inline-flex;
+  }
+
+  .register-heading {
+    margin-top: 24px;
+  }
+
+  .register-role-selector,
+  .register-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .register-preview-top {
+    flex-direction: column;
+  }
+}

@@ -1,3 +1,4 @@
+import LandingPage from "./pages/LandingPage";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import "./App.css";
 
@@ -638,7 +639,10 @@ function Home() {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={<LandingPage />}
+      />
 
       <Route
         path="/login"

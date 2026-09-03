@@ -486,14 +486,17 @@ def create_appointment(
 
     # The response model expects patient_name.
     return {
-        "id": appointment.id,
-        "patient_id": appointment.patient_id,
-        "doctor_id": appointment.doctor_id,
-        "patient_name": current_user.name,
-        "appointment_date": appointment.appointment_date,
-        "appointment_time": appointment.appointment_time,
-        "status": appointment.status
-    }
+    "id": appointment.id,
+    "patient_id": appointment.patient_id,
+    "doctor_id": appointment.doctor_id,
+    "patient_name": current_user.name,
+    "doctor_name": doctor.user.name,
+    "specialization": doctor.specialization,
+    "department": doctor.department,
+    "appointment_date": appointment.appointment_date,
+    "appointment_time": appointment.appointment_time,
+    "status": appointment.status
+}
 
 
 # ============================================================
@@ -534,17 +537,32 @@ def get_my_appointments(
     ).all()
 
     return [
-        {
-            "id": appointment.id,
-            "patient_id": appointment.patient_id,
-            "doctor_id": appointment.doctor_id,
-            "patient_name": current_user.name,
-            "appointment_date": appointment.appointment_date,
-            "appointment_time": appointment.appointment_time,
-            "status": appointment.status
-        }
-        for appointment in appointments
-    ]
+    {
+        "id": appointment.id,
+        "patient_id": appointment.patient_id,
+        "doctor_id": appointment.doctor_id,
+        "patient_name": current_user.name,
+        "doctor_name": (
+            appointment.doctor.user.name
+            if appointment.doctor and appointment.doctor.user
+            else "Unknown Doctor"
+        ),
+        "specialization": (
+            appointment.doctor.specialization
+            if appointment.doctor
+            else "Unknown"
+        ),
+        "department": (
+            appointment.doctor.department
+            if appointment.doctor
+            else "Unknown"
+        ),
+        "appointment_date": appointment.appointment_date,
+        "appointment_time": appointment.appointment_time,
+        "status": appointment.status
+    }
+    for appointment in appointments
+]
 
 
 # ============================================================
@@ -594,6 +612,22 @@ def get_doctor_appointments(
                 if appointment.patient
                 and appointment.patient.user
                 else "Unknown Patient"
+            ),
+            "doctor_name": (
+                appointment.doctor.user.name
+                if appointment.doctor
+                and appointment.doctor.user
+                else "Unknown Doctor"
+            ),
+            "specialization": (
+                appointment.doctor.specialization
+                if appointment.doctor
+                else "Unknown"
+            ),
+            "department": (
+                appointment.doctor.department
+                if appointment.doctor
+                else "Unknown"
             ),
             "appointment_date": appointment.appointment_date,
             "appointment_time": appointment.appointment_time,
