@@ -902,7 +902,10 @@ def get_doctor_queue(
         db.query(models.Queue)
         .join(models.Appointment)
         .filter(
-            models.Appointment.doctor_id == doctor.id
+            models.Appointment.doctor_id == doctor.id,
+            models.Queue.status.in_(
+                ["WAITING", "CALLED", "IN_PROGRESS"]
+            )
         )
         .order_by(
             models.Queue.queue_number.asc()
@@ -915,30 +918,20 @@ def get_doctor_queue(
             "queue_id": queue.id,
             "appointment_id": queue.appointment_id,
             "patient_id": queue.appointment.patient_id,
-
             "patient_name": (
                 queue.appointment.patient.user.name
                 if queue.appointment.patient
                 and queue.appointment.patient.user
                 else "Unknown Patient"
             ),
-
             "queue_number": queue.queue_number,
             "status": queue.status,
-
-            "appointment_date": (
-                queue.appointment.appointment_date
-            ),
-
-            "appointment_time": (
-                queue.appointment.appointment_time
-            )
+            "appointment_date": queue.appointment.appointment_date,
+            "appointment_time": queue.appointment.appointment_time
         }
         for queue in queue_items
     ]
-# ============================================================
-# CALL NEXT PATIENT
-# ============================================================
+
 
 # ============================================================
 # CALL NEXT PATIENT
@@ -965,27 +958,6 @@ def call_next_patient(
             detail="Doctor profile not found"
         )
 
-    # Check if the doctor already has an active patient
-    active_patient = (
-        db.query(models.Queue)
-        .join(models.Appointment)
-        .filter(
-            models.Appointment.doctor_id == doctor.id,
-            models.Queue.status.in_([
-                "CALLED",
-                "IN_PROGRESS"
-            ])
-        )
-        .first()
-    )
-
-    if active_patient:
-        raise HTTPException(
-            status_code=400,
-            detail="Please finish the current patient before calling the next one"
-        )
-
-    # Find the next waiting patient
     queue_entry = (
         db.query(models.Queue)
         .join(models.Appointment)
@@ -1017,6 +989,7 @@ def call_next_patient(
         "queue_number": queue_entry.queue_number,
         "status": queue_entry.status
     }
+
 
 # ============================================================
 # START CONSULTATION

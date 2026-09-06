@@ -18,7 +18,11 @@ function DoctorDashboard() {
   const role = localStorage.getItem("smartHealthRole");
 
   const apiUrl = import.meta.env.VITE_API_URL;
+const formatDateTime = (date, time) => {
+  if (!date) return "—";
 
+  return `${date}${time ? ` ${time}` : ""}`;
+};
   useEffect(() => {
     if (!token || role !== "doctor") {
       navigate("/login", { replace: true });
@@ -270,13 +274,17 @@ const upcomingAppointments = appointments.filter(
     (item) => item.status === "WAITING"
   ).length;
 
-  const calledCount = queue.filter(
-    (item) => item.status === "CALLED"
-  ).length;
+const calledCount = queue.filter(
+  (item) => item.status === "CALLED"
+).length;
 
-  const completedCount = queue.filter(
-    (item) => item.status === "COMPLETED"
-  ).length;
+const inProgressCount = queue.filter(
+  (item) => item.status === "IN_PROGRESS"
+).length;
+
+const completedCount = queue.filter(
+  (item) => item.status === "COMPLETED"
+).length;
 
   const currentPatient =
     queue.find(
@@ -284,7 +292,20 @@ const upcomingAppointments = appointments.filter(
         item.status === "CALLED" ||
         item.status === "IN_PROGRESS"
     ) || null;
+const activeQueue = queue.filter(
+  (item) =>
+    item.status === "WAITING" ||
+    item.status === "CALLED" ||
+    item.status === "IN_PROGRESS"
+);
 
+const completedQueue = queue.filter(
+  (item) => item.status === "COMPLETED"
+);
+
+const skippedQueue = queue.filter(
+  (item) => item.status === "SKIPPED"
+);
   return (
     <div className="doctor-dashboard">
 
@@ -559,9 +580,10 @@ const upcomingAppointments = appointments.filter(
                     className="call-next-button"
                     onClick={handleCallNext}
                     disabled={
-                      actionLoading ||
-                      waitingCount === 0
-                    }
+  actionLoading ||
+  waitingCount === 0 ||
+  currentPatient !== null
+}
                   >
                     <span>
                       {actionLoading
@@ -580,115 +602,209 @@ const upcomingAppointments = appointments.filter(
 
                 <div className="queue-list">
 
-                  {queue.length === 0 ? (
-                    <div className="queue-empty">
-                      <div>✓</div>
+  {activeQueue.length === 0 ? (
+    <div className="queue-empty">
+      <div>✓</div>
 
-                      <strong>
-                        Queue is empty
-                      </strong>
+      <strong>
+        No active patients
+      </strong>
 
-                      <span>
-                        There are no patients waiting.
-                      </span>
-                    </div>
-                  ) : (
-                    queue.map((item) => (
-                      <div
-                        className="queue-row"
-                        key={item.queue_id}
-                      >
+      <span>
+        There are no patients currently waiting or in consultation.
+      </span>
+    </div>
+  ) : (
+    activeQueue.map((item) => (
+      <div
+        className="queue-row"
+        key={item.queue_id}
+      >
 
-                        <div className="queue-number">
-                          #{item.queue_number}
-                        </div>
+        <div className="queue-number">
+          #{item.queue_number}
+        </div>
 
-                        <div className="queue-patient-info">
+        <div className="queue-patient-info">
 
- <strong>
-  {item.patient_name || "Unknown Patient"}
-</strong>
+          <strong>
+            {item.patient_name || "Unknown Patient"}
+          </strong>
 
-<span>
-  Queue #{item.queue_number}
-  {" • "}
-  Appointment #{item.appointment_id}
-</span>
+          <span>
+            Queue #{item.queue_number}
+            {" • "}
+            Appointment #{item.appointment_id}
+          </span>
 
-<small>
-  {item.appointment_date}
-  {" • "}
-  {item.appointment_time}
+          <small>
+  {formatDateTime(
+    item.appointment_date,
+    item.appointment_time
+  )}
 </small>
+        </div>
 
-                        </div>
+        <div className="queue-actions">
 
-                        <div className="queue-actions">
+          <span
+            className={`queue-status status-${item.status.toLowerCase()}`}
+          >
+            {item.status}
+          </span>
 
-                          <span
-                            className={`queue-status status-${item.status.toLowerCase()}`}
-                          >
-                            {item.status}
-                          </span>
+          {item.status === "CALLED" && (
+            <button
+              type="button"
+              onClick={() =>
+                handleStart(item.queue_id)
+              }
+              disabled={actionLoading}
+            >
+              Start
+            </button>
+          )}
 
-                          {item.status === "CALLED" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleStart(
-                                  item.queue_id
-                                )
-                              }
-                              disabled={
-                                actionLoading
-                              }
-                            >
-                              Start
-                            </button>
-                          )}
+          {item.status === "IN_PROGRESS" && (
+            <button
+              type="button"
+              onClick={() =>
+                handleComplete(item.queue_id)
+              }
+              disabled={actionLoading}
+            >
+              Complete
+            </button>
+          )}
 
-                          {item.status === "IN_PROGRESS" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleComplete(
-                                  item.queue_id
-                                )
-                              }
-                              disabled={
-                                actionLoading
-                              }
-                            >
-                              Complete
-                            </button>
-                          )}
+          {item.status === "WAITING" && (
+            <button
+              type="button"
+              onClick={() =>
+                handleSkip(item.queue_id)
+              }
+              disabled={actionLoading}
+            >
+              Skip
+            </button>
+          )}
 
-                          {item.status === "WAITING" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleSkip(
-                                  item.queue_id
-                                )
-                              }
-                              disabled={
-                                actionLoading
-                              }
-                            >
-                              Skip
-                            </button>
-                          )}
+        </div>
 
-                        </div>
+      </div>
+    ))
+  )}
 
-                      </div>
-                    ))
-                  )}
+</div>
 
-                </div>
+{/* =================================================
+    COMPLETED PATIENTS
+================================================= */}
 
-              </div>
+{completedQueue.length > 0 && (
+  <div className="queue-history-section">
 
+    <div className="queue-history-header">
+      <span>COMPLETED</span>
+      <strong>{completedQueue.length}</strong>
+    </div>
+
+    {completedQueue.map((item) => (
+      <div
+        className="queue-row queue-history-row"
+        key={item.queue_id}
+      >
+
+        <div className="queue-number">
+          #{item.queue_number}
+        </div>
+
+        <div className="queue-patient-info">
+          <strong>
+            {item.patient_name || "Unknown Patient"}
+          </strong>
+
+          <span>
+            Appointment #{item.appointment_id}
+          </span>
+
+          <small>
+  {formatDateTime(
+    item.appointment_date,
+    item.appointment_time
+  )}
+</small>
+        </div>
+
+        <div className="queue-actions">
+          <span className="queue-status status-completed">
+            COMPLETED
+          </span>
+        </div>
+
+      </div>
+    ))}
+
+  </div>
+)}
+
+{/* =================================================
+    SKIPPED PATIENTS
+================================================= */}
+
+{skippedQueue.length > 0 && (
+  <div className="queue-history-section">
+
+    <div className="queue-history-header">
+      <span>SKIPPED</span>
+      <strong>{skippedQueue.length}</strong>
+    </div>
+
+    {skippedQueue.map((item) => (
+      <div
+        className="queue-row queue-history-row"
+        key={item.queue_id}
+      >
+
+        <div className="queue-number">
+          #{item.queue_number}
+        </div>
+
+        <div className="queue-patient-info">
+          <strong>
+            {item.patient_name || "Unknown Patient"}
+          </strong>
+
+          <span>
+            Appointment #{item.appointment_id}
+          </span>
+
+          <small>
+  {formatDateTime(
+    item.appointment_date,
+    item.appointment_time
+  )}
+</small>
+        </div>
+
+        <div className="queue-actions">
+          <span className="queue-status status-skipped">
+            SKIPPED
+          </span>
+        </div>
+
+      </div>
+    ))}
+
+  </div>
+)}
+
+{/* CLOSE LIVE QUEUE PANEL */}
+</div>
+
+{/* =================================================
+    TODAY'S APPOINTMENTS
+================================================= */}
               {/* =================================================
                   TODAY'S APPOINTMENTS
               ================================================= */}
