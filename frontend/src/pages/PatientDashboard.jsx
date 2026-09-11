@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./PatientDashboard.css";
@@ -15,7 +16,61 @@ function PatientDashboard() {
   const token = localStorage.getItem("smartHealthToken");
   const role = localStorage.getItem("smartHealthRole");
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    "http://127.0.0.1:8000";
+
+  /* =========================
+     DATE / TIME HELPERS
+  ========================== */
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsedDate = new Date(`${date}T00:00:00`);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return parsedDate.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (time) => {
+    if (!time) return "—";
+
+    const [hours, minutes] = time.split(":");
+
+    if (
+      hours === undefined ||
+      minutes === undefined
+    ) {
+      return time;
+    }
+
+    const date = new Date();
+
+    date.setHours(
+      Number(hours),
+      Number(minutes),
+      0,
+      0
+    );
+
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  /* =========================
+     LOAD DASHBOARD
+  ========================== */
 
   useEffect(() => {
     if (!token || role !== "patient") {
@@ -60,10 +115,18 @@ function PatientDashboard() {
           appointmentsResponse.status === 401 ||
           queueResponse.status === 401
         ) {
-          localStorage.removeItem("smartHealthToken");
-          localStorage.removeItem("smartHealthRole");
+          localStorage.removeItem(
+            "smartHealthToken"
+          );
 
-          navigate("/login", { replace: true });
+          localStorage.removeItem(
+            "smartHealthRole"
+          );
+
+          navigate("/login", {
+            replace: true,
+          });
+
           return;
         }
 
@@ -100,15 +163,17 @@ function PatientDashboard() {
         /* =========================
            QUEUE
            
-           404 is allowed because
-           it means no active queue.
+           404 means no active queue.
         ========================== */
 
         let queueData = null;
 
         if (queueResponse.ok) {
-          queueData = await queueResponse.json();
-        } else if (queueResponse.status !== 404) {
+          queueData =
+            await queueResponse.json();
+        } else if (
+          queueResponse.status !== 404
+        ) {
           throw new Error(
             "Unable to load your queue."
           );
@@ -139,74 +204,99 @@ function PatientDashboard() {
     };
 
     loadDashboard();
-  }, [apiUrl, navigate, role, token]);
+  }, [
+    apiUrl,
+    navigate,
+    role,
+    token,
+  ]);
+
+  /* =========================
+     CANCEL APPOINTMENT
+  ========================== */
+
+  const handleCancelAppointment = async (
+    appointmentId
+  ) => {
+    if (!appointmentId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this appointment?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setError("");
+
+      const response = await fetch(
+        `${apiUrl}/appointments/${appointmentId}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      const data =
+        await response.json();
+
+      if (response.status === 401) {
+        localStorage.removeItem(
+          "smartHealthToken"
+        );
+
+        localStorage.removeItem(
+          "smartHealthRole"
+        );
+
+        navigate("/login", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data.detail === "string"
+            ? data.detail
+            : "Unable to cancel appointment."
+        );
+      }
+
+      window.location.reload();
+    } catch (err) {
+      console.error(
+        "Cancel appointment error:",
+        err
+      );
+
+      setError(
+        err.message ||
+          "Unable to cancel the appointment."
+      );
+    }
+  };
 
   /* =========================
      LOGOUT
   ========================== */
-const handleCancelAppointment = async (appointmentId) => {
-  if (!appointmentId) {
-    return;
-  }
 
-  const confirmed = window.confirm(
-    "Are you sure you want to cancel this appointment?"
-  );
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    setError("");
-
-    const response = await fetch(
-      `${apiUrl}/appointments/${appointmentId}/cancel`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (response.status === 401) {
-      localStorage.removeItem("smartHealthToken");
-      localStorage.removeItem("smartHealthRole");
-
-      navigate("/login", { replace: true });
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        typeof data.detail === "string"
-          ? data.detail
-          : "Unable to cancel appointment."
-      );
-    }
-
-    // Reload everything so appointment and queue
-    // information stay synchronized.
-    window.location.reload();
-  } catch (err) {
-    console.error(
-      "Cancel appointment error:",
-      err
-    );
-
-    setError(
-      err.message ||
-        "Unable to cancel the appointment."
-    );
-  }
-};
   const handleLogout = () => {
-    localStorage.removeItem("smartHealthToken");
-    localStorage.removeItem("smartHealthRole");
+    localStorage.removeItem(
+      "smartHealthToken"
+    );
+
+    localStorage.removeItem(
+      "smartHealthRole"
+    );
 
     navigate("/login", {
       replace: true,
@@ -218,18 +308,20 @@ const handleCancelAppointment = async (appointmentId) => {
   ========================== */
 
   const firstName =
-    profile?.name?.split(" ")[0] || "there";
+    profile?.name?.split(" ")[0] ||
+    "there";
 
-  const upcomingAppointments = appointments.filter(
-  (appointment) =>
-    appointment.status !== "COMPLETED" &&
-    appointment.status !== "CANCELLED"
-);
+  const upcomingAppointments =
+    appointments.filter(
+      (appointment) =>
+        appointment.status !== "COMPLETED" &&
+        appointment.status !== "CANCELLED"
+    );
 
-const nextAppointment =
-  upcomingAppointments.length > 0
-    ? upcomingAppointments[0]
-    : null;
+  const nextAppointment =
+    upcomingAppointments.length > 0
+      ? upcomingAppointments[0]
+      : null;
 
   const queueNumber =
     queue?.queue_number ??
@@ -251,7 +343,6 @@ const nextAppointment =
 
       <aside className="patient-sidebar">
 
-        {/* LOGO */}
         <Link
           to="/"
           className="dashboard-logo"
@@ -265,7 +356,6 @@ const nextAppointment =
           </span>
         </Link>
 
-        {/* NAVIGATION */}
         <nav className="dashboard-nav">
 
           <a
@@ -310,7 +400,6 @@ const nextAppointment =
 
         </nav>
 
-        {/* LOGOUT */}
         <button
           type="button"
           className="dashboard-logout"
@@ -357,7 +446,8 @@ const nextAppointment =
 
             <div>
               <strong>
-                {profile?.name || "Patient"}
+                {profile?.name ||
+                  "Patient"}
               </strong>
 
               <span>
@@ -415,9 +505,12 @@ const nextAppointment =
                   </span>
 
                   <strong>
-                    {nextAppointment?.time ||
-                      nextAppointment?.appointment_time ||
-                      "—"}
+                    {nextAppointment
+                      ? formatTime(
+                          nextAppointment.time ||
+                            nextAppointment.appointment_time
+                        )
+                      : "—"}
                   </strong>
                 </div>
 
@@ -532,34 +625,36 @@ const nextAppointment =
                     <div className="appointment-doctor-info">
 
                       <strong>
-  {nextAppointment.doctor_name ||
-    "Unknown Doctor"}
-</strong>
+                        {nextAppointment.doctor_name ||
+                          "Unknown Doctor"}
+                      </strong>
 
-<span>
-  {nextAppointment.specialization ||
-    "Healthcare appointment"}
-</span>
+                      <span>
+                        {nextAppointment.specialization ||
+                          "Healthcare appointment"}
+                      </span>
 
-<small className="appointment-department">
-  {nextAppointment.department ||
-    ""}
-</small>
+                      <small className="appointment-department">
+                        {nextAppointment.department ||
+                          ""}
+                      </small>
 
                     </div>
 
                     <div className="appointment-date">
 
                       <strong>
-                        {nextAppointment.date ||
-                          nextAppointment.appointment_date ||
-                          "—"}
+                        {formatDate(
+                          nextAppointment.date ||
+                            nextAppointment.appointment_date
+                        )}
                       </strong>
 
                       <span>
-                        {nextAppointment.time ||
-                          nextAppointment.appointment_time ||
-                          "—"}
+                        {formatTime(
+                          nextAppointment.time ||
+                            nextAppointment.appointment_time
+                        )}
                       </span>
 
                     </div>
@@ -632,37 +727,47 @@ const nextAppointment =
 
                 <div className="queue-details">
 
-                  <div>
+                  <div className="queue-detail-item">
+
                     <span>
                       Status
                     </span>
 
-                    <strong>
+                    <strong
+                      className={`queue-status-${queueStatus.toLowerCase()}`}
+                    >
                       {queueStatus}
                     </strong>
+
                   </div>
 
-                  <div>
+                  <div className="queue-detail-item">
+
                     <span>
                       Patients ahead
                     </span>
 
                     <strong>
-                      {queue?.patients_ahead ??
+                      {queue?.people_ahead ??
                         "—"}
                     </strong>
+
                   </div>
 
-                  <div>
+                  <div className="queue-detail-item">
+
                     <span>
-                      Estimated wait
+                      Appointment
                     </span>
 
                     <strong>
-                      {queue?.estimated_wait_time ??
-                        queue?.estimated_wait ??
-                        "—"}
+                      {queue
+                        ? formatTime(
+                            queue.appointment_time
+                          )
+                        : "—"}
                     </strong>
+
                   </div>
 
                 </div>
@@ -704,6 +809,7 @@ const nextAppointment =
 
                     <thead>
                       <tr>
+
                         <th>
                           Date
                         </th>
@@ -719,13 +825,17 @@ const nextAppointment =
                         <th>
                           Status
                         </th>
+
                       </tr>
                     </thead>
 
                     <tbody>
 
                       {appointments.map(
-                        (appointment, index) => (
+                        (
+                          appointment,
+                          index
+                        ) => (
                           <tr
                             key={
                               appointment.id ||
@@ -735,55 +845,63 @@ const nextAppointment =
                           >
 
                             <td>
-                              {appointment.date ||
-                                appointment.appointment_date ||
-                                "—"}
+                              {formatDate(
+                                appointment.date ||
+                                  appointment.appointment_date
+                              )}
                             </td>
 
                             <td>
-                              {appointment.time ||
-                                appointment.appointment_time ||
-                                "—"}
+                              {formatTime(
+                                appointment.time ||
+                                  appointment.appointment_time
+                              )}
                             </td>
 
-                           <td>
-  <strong className="table-doctor-name">
-    {appointment.doctor_name ||
-      "Unknown Doctor"}
-  </strong>
+                            <td>
 
-  <small className="table-doctor-specialization">
-    {appointment.specialization ||
-      ""}
-  </small>
-</td>
+                              <strong className="table-doctor-name">
+                                {appointment.doctor_name ||
+                                  "Unknown Doctor"}
+                              </strong>
 
-                           <td>
-  <div className="appointment-actions">
+                              <small className="table-doctor-specialization">
+                                {appointment.specialization ||
+                                  ""}
+                              </small>
 
-    <span className="appointment-status">
-      {appointment.status ||
-        "Scheduled"}
-    </span>
+                            </td>
 
-    {appointment.status !== "COMPLETED" &&
-      appointment.status !== "CANCELLED" &&
-      appointment.id && (
-        <button
-          type="button"
-          className="appointment-cancel-button"
-          onClick={() =>
-            handleCancelAppointment(
-              appointment.id
-            )
-          }
-        >
-          Cancel
-        </button>
-      )}
+                            <td>
 
-  </div>
-</td>
+                              <div className="appointment-actions">
+
+                                <span className="appointment-status">
+                                  {appointment.status ||
+                                    "Scheduled"}
+                                </span>
+
+                                {appointment.status !==
+                                  "COMPLETED" &&
+                                  appointment.status !==
+                                    "CANCELLED" &&
+                                  appointment.id && (
+                                    <button
+                                      type="button"
+                                      className="appointment-cancel-button"
+                                      onClick={() =>
+                                        handleCancelAppointment(
+                                          appointment.id
+                                        )
+                                      }
+                                    >
+                                      Cancel
+                                    </button>
+                                  )}
+
+                              </div>
+
+                            </td>
 
                           </tr>
                         )
@@ -796,9 +914,7 @@ const nextAppointment =
                 </div>
               ) : (
                 <div className="empty-table">
-
                   No appointments found.
-
                 </div>
               )}
 
@@ -835,7 +951,8 @@ const nextAppointment =
                   </span>
 
                   <strong>
-                    {profile?.name || "—"}
+                    {profile?.name ||
+                      "—"}
                   </strong>
                 </div>
 
@@ -845,7 +962,8 @@ const nextAppointment =
                   </span>
 
                   <strong>
-                    {profile?.email || "—"}
+                    {profile?.email ||
+                      "—"}
                   </strong>
                 </div>
 
@@ -855,7 +973,8 @@ const nextAppointment =
                   </span>
 
                   <strong>
-                    {profile?.phone || "—"}
+                    {profile?.phone ||
+                      "—"}
                   </strong>
                 </div>
 
@@ -865,7 +984,8 @@ const nextAppointment =
                   </span>
 
                   <strong>
-                    {profile?.date_of_birth || "—"}
+                    {profile?.date_of_birth ||
+                      "—"}
                   </strong>
                 </div>
 
@@ -883,3 +1003,4 @@ const nextAppointment =
 }
 
 export default PatientDashboard;
+

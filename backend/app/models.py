@@ -33,7 +33,11 @@ class Patient(Base):
     __tablename__ = "patients"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        unique=True
+    )
     phone = Column(String, nullable=True)
     date_of_birth = Column(String, nullable=True)
 
@@ -47,10 +51,23 @@ class Doctor(Base):
     __tablename__ = "doctors"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), unique=True)
-    specialization = Column(String, nullable=False)
-    department = Column(String, nullable=False)
-    available = Column(Integer, default=1)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        unique=True
+    )
+    specialization = Column(
+        String,
+        nullable=False
+    )
+    department = Column(
+        String,
+        nullable=False
+    )
+    available = Column(
+        Integer,
+        default=1
+    )
 
     user = relationship(
         "User",
@@ -61,7 +78,11 @@ class Doctor(Base):
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     patient_id = Column(
         Integer,
@@ -110,7 +131,11 @@ class Appointment(Base):
 class Queue(Base):
     __tablename__ = "queue"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     appointment_id = Column(
         Integer,
@@ -130,9 +155,28 @@ class Queue(Base):
         default="WAITING"
     )
 
+    # Patient enters the queue
     created_at = Column(
         DateTime,
         default=datetime.utcnow
+    )
+
+    # Doctor calls the patient
+    called_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    # Doctor starts the appointment
+    started_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    # Appointment is completed
+    completed_at = Column(
+        DateTime,
+        nullable=True
     )
 
     appointment = relationship(

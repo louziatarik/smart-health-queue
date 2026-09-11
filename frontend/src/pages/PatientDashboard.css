@@ -89,7 +89,7 @@
   border-radius: 12px;
   color: var(--muted);
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
 }
@@ -123,7 +123,7 @@
   background: transparent;
   color: var(--muted);
   font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -165,7 +165,7 @@
 
 .patient-header h1 {
   margin: 8px 0 0;
-  font-size: 32px;
+  font-size: 34px;
   line-height: 1.1;
   letter-spacing: -1.5px;
   color: var(--primary-dark);
@@ -322,13 +322,13 @@
 
 .patient-stat-card span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .patient-stat-card strong {
   margin-top: 6px;
   color: var(--primary-dark);
-  font-size: 18px;
+  font-size: 20px;
 }
 
 /* =========================================
@@ -418,13 +418,13 @@
 
 .appointment-doctor-info strong {
   color: var(--primary);
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .appointment-doctor-info span {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .appointment-date {
@@ -433,13 +433,13 @@
 
 .appointment-date strong {
   color: var(--primary-dark);
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .appointment-date span {
   margin-top: 4px;
   color: var(--accent);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -468,7 +468,7 @@
 .queue-position-label {
   margin: 7px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .queue-details {
@@ -491,13 +491,13 @@
 
 .queue-details span {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .queue-details strong {
   margin-top: 5px;
   color: var(--text-secondary);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 /* =========================================
@@ -559,7 +559,7 @@
   padding: 12px;
   border-bottom: 1px solid var(--border);
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -569,7 +569,7 @@
   padding: 15px 12px;
   border-bottom: 1px solid #edf1f6;
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .appointments-table tbody tr:hover {
@@ -672,7 +672,7 @@
   background: #fff7f7;
   color: var(--danger);
   font-family: inherit;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -706,14 +706,14 @@
 .table-doctor-name {
   display: block;
   color: var(--text-secondary);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .table-doctor-specialization {
   display: block;
   margin-top: 3px;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 /* =========================================
@@ -797,3 +797,53 @@
     grid-template-columns: 1fr;
   }
 }
+.next-appointment-content {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.next-appointment-content:hover {
+  transform: translateY(-2px);
+  border-color: var(--light-blue);
+  box-shadow: 0 10px 25px rgba(26, 42, 74, 0.08);
+}
+
+/* =========================================
+   QUEUE DETAIL INTERACTIONS
+========================================= */
+
+.queue-detail-item {
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.queue-detail-item:hover {
+  transform: translateY(-2px);
+  background: #edf4fb;
+}
+
+.queue-status-waiting {
+  color: var(--waiting) !important;
+}
+
+.queue-status-called {
+  color: var(--called) !important;
+}
+
+.queue-status-in_progress {
+  color: var(--called) !important;
+}
+
+.queue-status-completed {
+  color: var(--success) !important;
+}
+
+.queue-status-skipped,
+.queue-status-cancelled {
+  color: var(--danger) !important;
+}
+

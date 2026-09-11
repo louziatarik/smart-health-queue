@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./BookAppointment.css";
+
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function BookAppointment() {
   const navigate = useNavigate();
@@ -16,13 +20,31 @@ function BookAppointment() {
   const [success, setSuccess] = useState("");
 
   const token = localStorage.getItem("smartHealthToken");
-  const role = localStorage.getItem("smartHealthRole");
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const getToday = () => {
+    const now = new Date();
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const getCurrentTime = () => {
+    const now = new Date();
+
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  };
+
+  const today = getToday();
 
   useEffect(() => {
-    if (!token || role !== "patient") {
-      navigate("/login", { replace: true });
+    if (!token) {
+      navigate("/login");
       return;
     }
 
@@ -31,35 +53,58 @@ function BookAppointment() {
         setLoadingDoctors(true);
         setError("");
 
-        const response = await fetch(`${apiUrl}/doctors`);
+        const response = await fetch(`${API_URL}/doctors`);
+
+        if (!response.ok) {
+          throw new Error("Failed to load doctors");
+        }
 
         const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(
-            data.detail || "Unable to load doctors."
-          );
-        }
-
-        setDoctors(
-          Array.isArray(data) ? data : []
-        );
+        setDoctors(data);
       } catch (err) {
-        console.error("Doctors error:", err);
-
-        setError(
-          err.message ||
-            "Unable to load available doctors."
-        );
+        console.error(err);
+        setError("Unable to load doctors. Please try again.");
       } finally {
         setLoadingDoctors(false);
       }
     };
 
     loadDoctors();
-  }, [apiUrl, navigate, role, token]);
+  }, [navigate, token]);
 
-  const handleBooking = async (event) => {
+  const selectedDoctor = doctors.find(
+    (doctor) => doctor.id === Number(doctorId)
+  );
+
+  const handleDoctorChange = (event) => {
+    setDoctorId(event.target.value);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleDateChange = (event) => {
+    const selectedDate = event.target.value;
+
+    setAppointmentDate(selectedDate);
+
+    // Reset time when date changes
+    setAppointmentTime("");
+
+    setError("");
+    setSuccess("");
+  };
+
+  const handleTimeChange = (event) => {
+    const selectedTime = event.target.value;
+
+    setAppointmentTime(selectedTime);
+
+    setError("");
+    setSuccess("");
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     setError("");
@@ -80,25 +125,38 @@ function BookAppointment() {
       return;
     }
 
+    // Prevent booking in the past
+    if (appointmentDate < today) {
+      setError("Please select today or a future date.");
+      return;
+    }
+
+    // If booking today, prevent selecting a past/current time
+    if (
+      appointmentDate === today &&
+      appointmentTime <= getCurrentTime()
+    ) {
+      setError(
+        "Please choose a future time for today's appointment."
+      );
+      return;
+    }
+
     try {
       setBooking(true);
 
-      const response = await fetch(
-        `${apiUrl}/appointments`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            doctor_id: Number(doctorId),
-            appointment_date: appointmentDate,
-            appointment_time: appointmentTime,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/appointments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          doctor_id: Number(doctorId),
+          appointment_date: appointmentDate,
+          appointment_time: appointmentTime,
+        }),
+      });
 
       const data = await response.json();
 
@@ -106,316 +164,265 @@ function BookAppointment() {
         localStorage.removeItem("smartHealthToken");
         localStorage.removeItem("smartHealthRole");
 
-        navigate("/login", { replace: true });
+        navigate("/login");
         return;
       }
 
       if (!response.ok) {
-        let message = "Unable to book appointment.";
-
-        if (typeof data.detail === "string") {
-          message = data.detail;
-        } else if (Array.isArray(data.detail)) {
-          message = data.detail
-            .map((item) => item.msg)
-            .join(", ");
-        }
-
-        throw new Error(message);
+        throw new Error(
+          data.detail || "Failed to book appointment."
+        );
       }
 
-      setSuccess(
-        "Appointment booked successfully!"
-      );
+      setSuccess("Appointment booked successfully!");
+
+      setDoctorId("");
+      setAppointmentDate("");
+      setAppointmentTime("");
 
       setTimeout(() => {
         navigate("/patient-dashboard");
       }, 1200);
     } catch (err) {
-      console.error("Booking error:", err);
+      console.error(err);
 
       setError(
-        err.message ||
-          "Unable to connect to the Smart Health server."
+        err.message || "Something went wrong. Please try again."
       );
     } finally {
       setBooking(false);
     }
   };
 
+  const availableDoctors = doctors.filter(
+    (doctor) => doctor.available === 1
+  );
+
   return (
-    <div className="booking-page">
+    <div className="book-page">
+      <aside className="book-sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-icon">+</div>
+          <div>
+            <h2>Smart Health</h2>
+            <span>Queue System</span>
+          </div>
+        </div>
 
-      {/* SIDEBAR */}
-      <aside className="booking-sidebar">
-        <Link to="/" className="dashboard-logo">
-          <div className="logo-mark">+</div>
-          <span>Smart Health</span>
-        </Link>
-
-        <nav className="dashboard-nav">
-          <Link
-            to="/patient-dashboard"
-            className="dashboard-nav-item"
-          >
-            <span>⌂</span>
-            Overview
+        <nav className="sidebar-nav">
+          <Link to="/patient-dashboard" className="nav-item">
+            <span>▣</span>
+            Dashboard
           </Link>
 
           <Link
             to="/book-appointment"
-            className="dashboard-nav-item active"
+            className="nav-item active"
           >
-            <span>◷</span>
+            <span>＋</span>
             Book Appointment
           </Link>
         </nav>
 
-        <Link
-          to="/patient-dashboard"
-          className="booking-back-dashboard"
-        >
-          ← Back to dashboard
-        </Link>
+        <div className="sidebar-bottom">
+          <Link to="/patient-dashboard" className="back-link">
+            ← Back to Dashboard
+          </Link>
+        </div>
       </aside>
 
-      {/* MAIN */}
-      <main className="booking-main">
+      <main className="book-main">
+        <header className="book-header">
+          <div>
+            <p className="header-label">PATIENT PORTAL</p>
+            <h1>Book an Appointment</h1>
+            <p className="header-subtitle">
+              Choose a doctor, date, and time for your visit.
+            </p>
+          </div>
+        </header>
 
-        <div className="booking-header">
-          <span className="section-label">
-            APPOINTMENTS
-          </span>
-
-          <h1>Book an appointment</h1>
-
-          <p>
-            Choose a doctor, date, and time that works
-            for you.
-          </p>
-        </div>
-
-        <div className="booking-layout">
-
-          {/* FORM */}
-          <section className="booking-card">
+        <section className="booking-content">
+          <div className="booking-card">
+            <div className="booking-card-header">
+              <div>
+                <h2>Appointment Details</h2>
+                <p>
+                  Select your preferred doctor and appointment
+                  time.
+                </p>
+              </div>
+            </div>
 
             {error && (
-              <div className="login-error">
-                <span>!</span>
-                <p>{error}</p>
+              <div className="alert alert-error">
+                {error}
               </div>
             )}
 
             {success && (
-              <div className="register-success">
-                <span>✓</span>
-                <p>{success}</p>
+              <div className="alert alert-success">
+                {success}
               </div>
             )}
 
-            <form
-              className="booking-form"
-              onSubmit={handleBooking}
-            >
-
-              {/* DOCTOR */}
-              <div className="booking-field">
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
                 <label htmlFor="doctor">
-                  Choose doctor
+                  Select Doctor
                 </label>
 
-                {loadingDoctors ? (
-                  <div className="booking-loading">
-                    Loading doctors...
-                  </div>
-                ) : (
-                  <select
-                    id="doctor"
-                    value={doctorId}
-                    onChange={(event) =>
-                      setDoctorId(event.target.value)
-                    }
-                    required
-                  >
-                    <option value="">
-                      Select a doctor
-                    </option>
+                <select
+                  id="doctor"
+                  value={doctorId}
+                  onChange={handleDoctorChange}
+                  disabled={loadingDoctors || booking}
+                  required
+                >
+                  <option value="">
+                    {loadingDoctors
+                      ? "Loading doctors..."
+                      : "Choose a doctor"}
+                  </option>
 
-                    {doctors
-                      .filter(
-                        (doctor) =>
-                          doctor.available === 1
-                      )
-                      .map((doctor) => (
-                        <option
-                          key={doctor.id}
-                          value={doctor.id}
-                        >
-                          {doctor.name} —{" "}
-                          {doctor.specialization}
-                        </option>
-                      ))}
-                  </select>
-                )}
+                  {availableDoctors.map((doctor) => (
+                    <option
+                      key={doctor.id}
+                      value={doctor.id}
+                    >
+                      Dr. {doctor.name}
+                      {doctor.specialization
+                        ? ` — ${doctor.specialization}`
+                        : ""}
+                    </option>
+                  ))}
+                </select>
+
+                {!loadingDoctors &&
+                  availableDoctors.length === 0 && (
+                    <p className="form-help">
+                      No doctors are currently available.
+                    </p>
+                  )}
               </div>
 
-              {/* SELECTED DOCTOR PREVIEW */}
-              {doctorId && (
+              {selectedDoctor && (
                 <div className="selected-doctor">
-                  {(() => {
-                    const selectedDoctor =
-                      doctors.find(
-                        (doctor) =>
-                          doctor.id ===
-                          Number(doctorId)
-                      );
+                  <div className="doctor-avatar">
+                    {selectedDoctor.name
+                      ? selectedDoctor.name
+                          .charAt(0)
+                          .toUpperCase()
+                      : "D"}
+                  </div>
 
-                    if (!selectedDoctor) {
-                      return null;
-                    }
+                  <div>
+                    <strong>
+                      Dr. {selectedDoctor.name}
+                    </strong>
 
-                    return (
-                      <>
-                        <div className="selected-doctor-avatar">
-                          {selectedDoctor.name
-                            .replace("Dr. ", "")
-                            .substring(0, 2)
-                            .toUpperCase()}
-                        </div>
+                    {selectedDoctor.specialization && (
+                      <span>
+                        {selectedDoctor.specialization}
+                      </span>
+                    )}
 
-                        <div>
-                          <strong>
-                            {selectedDoctor.name}
-                          </strong>
-
-                          <span>
-                            {selectedDoctor.specialization}
-                          </span>
-
-                          <small>
-                            {selectedDoctor.department}
-                          </small>
-                        </div>
-                      </>
-                    );
-                  })()}
+                    <small>
+                      Available for appointments
+                    </small>
+                  </div>
                 </div>
               )}
 
-              {/* DATE */}
-              <div className="booking-field">
-                <label htmlFor="appointment-date">
-                  Appointment date
-                </label>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="appointment-date">
+                    Appointment Date
+                  </label>
 
-                <input
-                  id="appointment-date"
-                  type="date"
-                  value={appointmentDate}
-                  onChange={(event) =>
-                    setAppointmentDate(
-                      event.target.value
-                    )
-                  }
-                  min={
-                    new Date()
-                      .toISOString()
-                      .split("T")[0]
-                  }
-                  required
-                />
-              </div>
+                  <input
+                    id="appointment-date"
+                    type="date"
+                    value={appointmentDate}
+                    onChange={handleDateChange}
+                    min={today}
+                    disabled={booking}
+                    required
+                  />
+                </div>
 
-              {/* TIME */}
-              <div className="booking-field">
-                <label htmlFor="appointment-time">
-                  Appointment time
-                </label>
+                <div className="form-group">
+                  <label htmlFor="appointment-time">
+                    Appointment Time
+                  </label>
 
-                <input
-                  id="appointment-time"
-                  type="time"
-                  value={appointmentTime}
-                  onChange={(event) =>
-                    setAppointmentTime(
-                      event.target.value
-                    )
-                  }
-                  required
-                />
+                  <input
+                    id="appointment-time"
+                    type="time"
+                    value={appointmentTime}
+                    onChange={handleTimeChange}
+                    min={
+                      appointmentDate === today
+                        ? getCurrentTime()
+                        : undefined
+                    }
+                    disabled={booking}
+                    required
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="booking-submit"
+                className="book-submit-btn"
                 disabled={
-                  booking || loadingDoctors
+                  booking ||
+                  loadingDoctors ||
+                  !selectedDoctor
                 }
               >
                 {booking
-                  ? "Booking appointment..."
-                  : "Book appointment"}
-
-                <span>
-                  {booking ? "..." : "→"}
-                </span>
+                  ? "Booking Appointment..."
+                  : "Book Appointment"}
               </button>
             </form>
-          </section>
+          </div>
 
-          {/* SIDE INFORMATION */}
-          <aside className="booking-info">
-
-            <div className="booking-info-card">
-              <span className="booking-info-icon">
-                ◷
-              </span>
-
-              <h3>
-                Choose a convenient time
-              </h3>
-
-              <p>
-                Select a date and time that fits your
-                schedule.
-              </p>
+          <div className="booking-info">
+            <div className="info-card">
+              <div className="info-icon">✓</div>
+              <div>
+                <h3>Choose your doctor</h3>
+                <p>
+                  Select from doctors currently available
+                  for appointments.
+                </p>
+              </div>
             </div>
 
-            <div className="booking-info-card">
-              <span className="booking-info-icon">
-                #
-              </span>
-
-              <h3>
-                Join the queue
-              </h3>
-
-              <p>
-                Once your appointment is created,
-                your queue information can be tracked
-                from your dashboard.
-              </p>
+            <div className="info-card">
+              <div className="info-icon">◷</div>
+              <div>
+                <h3>Select a convenient time</h3>
+                <p>
+                  Pick a date and future time that works
+                  for you.
+                </p>
+              </div>
             </div>
 
-            <div className="booking-info-card booking-info-dark">
-              <span className="booking-info-icon">
-                ✓
-              </span>
-
-              <h3>
-                Stay updated
-              </h3>
-
-              <p>
-                Your appointment will appear in your
-                Smart Health patient dashboard.
-              </p>
+            <div className="info-card">
+              <div className="info-icon">+</div>
+              <div>
+                <h3>Join the queue</h3>
+                <p>
+                  After booking, your appointment will
+                  receive a queue number automatically.
+                </p>
+              </div>
             </div>
-
-          </aside>
-
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   );

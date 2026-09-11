@@ -1,7 +1,10 @@
+from datetime import datetime
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
+from sqlalchemy import inspect, text
 from pwdlib import PasswordHash
 
 from .database import Base, engine, get_db
@@ -15,13 +18,55 @@ from .schemas import (
     DoctorResponse
 )
 from .auth import create_access_token, decode_access_token
-
+from .ai_model import train_model, predict_waiting_time
 
 # ============================================================
 # DATABASE
 # ============================================================
 
+# Create any missing tables
 Base.metadata.create_all(bind=engine)
+
+
+# ============================================================
+# DATABASE MIGRATION
+# ============================================================
+
+def update_queue_table():
+    """
+    Add the timestamp columns required for waiting-time
+    prediction to an existing SQLite database.
+    """
+
+    inspector = inspect(engine)
+
+    if "queue" not in inspector.get_table_names():
+        return
+
+    existing_columns = {
+        column["name"]
+        for column in inspector.get_columns("queue")
+    }
+
+    new_columns = {
+        "called_at": "DATETIME",
+        "started_at": "DATETIME",
+        "completed_at": "DATETIME",
+    }
+
+    with engine.begin() as connection:
+        for column_name, column_type in new_columns.items():
+
+            if column_name not in existing_columns:
+                connection.execute(
+                    text(
+                        f"ALTER TABLE queue "
+                        f"ADD COLUMN {column_name} {column_type}"
+                    )
+                )
+
+
+update_queue_table()
 
 
 # ============================================================
@@ -63,7 +108,10 @@ security = HTTPBearer()
 # DOCTORS
 # ============================================================
 
-@app.get("/doctors", response_model=list[DoctorResponse])
+@app.get(
+    "/doctors",
+    response_model=list[DoctorResponse]
+)
 def get_doctors(
     db: Session = Depends(get_db)
 ):
@@ -484,19 +532,18 @@ def create_appointment(
     db.add(queue)
     db.commit()
 
-    # The response model expects patient_name.
     return {
-    "id": appointment.id,
-    "patient_id": appointment.patient_id,
-    "doctor_id": appointment.doctor_id,
-    "patient_name": current_user.name,
-    "doctor_name": doctor.user.name,
-    "specialization": doctor.specialization,
-    "department": doctor.department,
-    "appointment_date": appointment.appointment_date,
-    "appointment_time": appointment.appointment_time,
-    "status": appointment.status
-}
+        "id": appointment.id,
+        "patient_id": appointment.patient_id,
+        "doctor_id": appointment.doctor_id,
+        "patient_name": current_user.name,
+        "doctor_name": doctor.user.name,
+        "specialization": doctor.specialization,
+        "department": doctor.department,
+        "appointment_date": appointment.appointment_date,
+        "appointment_time": appointment.appointment_time,
+        "status": appointment.status
+    }
 
 
 # ============================================================
@@ -537,32 +584,33 @@ def get_my_appointments(
     ).all()
 
     return [
-    {
-        "id": appointment.id,
-        "patient_id": appointment.patient_id,
-        "doctor_id": appointment.doctor_id,
-        "patient_name": current_user.name,
-        "doctor_name": (
-            appointment.doctor.user.name
-            if appointment.doctor and appointment.doctor.user
-            else "Unknown Doctor"
-        ),
-        "specialization": (
-            appointment.doctor.specialization
-            if appointment.doctor
-            else "Unknown"
-        ),
-        "department": (
-            appointment.doctor.department
-            if appointment.doctor
-            else "Unknown"
-        ),
-        "appointment_date": appointment.appointment_date,
-        "appointment_time": appointment.appointment_time,
-        "status": appointment.status
-    }
-    for appointment in appointments
-]
+        {
+            "id": appointment.id,
+            "patient_id": appointment.patient_id,
+            "doctor_id": appointment.doctor_id,
+            "patient_name": current_user.name,
+            "doctor_name": (
+                appointment.doctor.user.name
+                if appointment.doctor
+                and appointment.doctor.user
+                else "Unknown Doctor"
+            ),
+            "specialization": (
+                appointment.doctor.specialization
+                if appointment.doctor
+                else "Unknown"
+            ),
+            "department": (
+                appointment.doctor.department
+                if appointment.doctor
+                else "Unknown"
+            ),
+            "appointment_date": appointment.appointment_date,
+            "appointment_time": appointment.appointment_time,
+            "status": appointment.status
+        }
+        for appointment in appointments
+    ]
 
 
 # ============================================================
@@ -866,8 +914,16 @@ def get_my_queue(
         "status": queue.status,
         "people_ahead": people_ahead,
         "doctor_id": doctor.id if doctor else None,
-        "doctor_specialization": doctor.specialization if doctor else None,
-        "department": doctor.department if doctor else None,
+        "doctor_specialization": (
+            doctor.specialization
+            if doctor
+            else None
+        ),
+        "department": (
+            doctor.department
+            if doctor
+            else None
+        ),
         "appointment_date": appointment.appointment_date,
         "appointment_time": appointment.appointment_time
     }
@@ -936,9 +992,7 @@ def get_doctor_queue(
         }
         for queue in queue_items
     ]
-# ============================================================
-# CALL NEXT PATIENT
-# ============================================================
+
 
 # ============================================================
 # CALL NEXT PATIENT
@@ -982,7 +1036,10 @@ def call_next_patient(
     if active_patient:
         raise HTTPException(
             status_code=400,
-            detail="Please finish the current patient before calling the next one"
+            detail=(
+                "Please finish the current patient "
+                "before calling the next one"
+            )
         )
 
     # Find the next waiting patient
@@ -1005,7 +1062,9 @@ def call_next_patient(
             detail="No patients are waiting"
         )
 
+    # Record when the patient was called
     queue_entry.status = "CALLED"
+    queue_entry.called_at = datetime.utcnow()
 
     db.commit()
     db.refresh(queue_entry)
@@ -1015,8 +1074,10 @@ def call_next_patient(
         "queue_id": queue_entry.id,
         "appointment_id": queue_entry.appointment_id,
         "queue_number": queue_entry.queue_number,
-        "status": queue_entry.status
+        "status": queue_entry.status,
+        "called_at": queue_entry.called_at
     }
+
 
 # ============================================================
 # START CONSULTATION
@@ -1066,7 +1127,9 @@ def start_consultation(
             detail="Only a CALLED patient can start consultation"
         )
 
+    # Record when the consultation starts
     queue_entry.status = "IN_PROGRESS"
+    queue_entry.started_at = datetime.utcnow()
 
     db.commit()
     db.refresh(queue_entry)
@@ -1076,7 +1139,8 @@ def start_consultation(
         "queue_id": queue_entry.id,
         "appointment_id": queue_entry.appointment_id,
         "queue_number": queue_entry.queue_number,
-        "status": queue_entry.status
+        "status": queue_entry.status,
+        "started_at": queue_entry.started_at
     }
 
 
@@ -1125,10 +1189,15 @@ def complete_consultation(
     if queue_entry.status != "IN_PROGRESS":
         raise HTTPException(
             status_code=400,
-            detail="Only an IN_PROGRESS consultation can be completed"
+            detail=(
+                "Only an IN_PROGRESS consultation "
+                "can be completed"
+            )
         )
 
+    # Record when the consultation finishes
     queue_entry.status = "COMPLETED"
+    queue_entry.completed_at = datetime.utcnow()
 
     appointment = queue_entry.appointment
     appointment.status = "COMPLETED"
@@ -1141,7 +1210,8 @@ def complete_consultation(
         "queue_id": queue_entry.id,
         "appointment_id": queue_entry.appointment_id,
         "queue_number": queue_entry.queue_number,
-        "status": queue_entry.status
+        "status": queue_entry.status,
+        "completed_at": queue_entry.completed_at
     }
 
 
@@ -1193,7 +1263,10 @@ def skip_patient(
     ]:
         raise HTTPException(
             status_code=400,
-            detail="Only WAITING or CALLED patients can be skipped"
+            detail=(
+                "Only WAITING or CALLED patients "
+                "can be skipped"
+            )
         )
 
     queue_entry.status = "SKIPPED"
@@ -1207,4 +1280,404 @@ def skip_patient(
         "appointment_id": queue_entry.appointment_id,
         "queue_number": queue_entry.queue_number,
         "status": queue_entry.status
+    }
+# ============================================================
+# AI WAITING-TIME MODEL TRAINING
+# ============================================================
+
+@app.post("/ai/train")
+def train_waiting_time_model(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != "DOCTOR":
+        raise HTTPException(
+            status_code=403,
+            detail="Only doctors can train the waiting-time model"
+        )
+
+    # Get completed queue records
+    completed_queues = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Queue.status == "COMPLETED",
+            models.Queue.created_at.isnot(None),
+            models.Queue.started_at.isnot(None),
+            models.Queue.completed_at.isnot(None)
+        )
+        .all()
+    )
+
+    if len(completed_queues) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Not enough completed consultations. "
+                "At least 2 completed consultations are required."
+            )
+        )
+
+    training_records = []
+
+    for queue in completed_queues:
+
+        # Calculate how many patients were ahead
+        # when this patient entered the queue.
+        people_ahead = (
+            db.query(models.Queue)
+            .join(models.Appointment)
+            .filter(
+                models.Appointment.doctor_id ==
+                queue.appointment.doctor_id,
+
+                models.Queue.queue_number <
+                queue.queue_number,
+
+                models.Queue.created_at <=
+                queue.created_at
+            )
+            .count()
+        )
+
+        training_records.append({
+            "created_at": queue.created_at,
+            "started_at": queue.started_at,
+            "completed_at": queue.completed_at,
+            "people_ahead": people_ahead
+        })
+
+    # ========================================================
+    # DEBUG: SHOW TRAINING DATA
+    # ========================================================
+
+    print("\n===== AI TRAINING DATA =====")
+
+    for record in training_records:
+
+        consultation_minutes = (
+            record["completed_at"] -
+            record["started_at"]
+        ).total_seconds() / 60
+
+        waiting_minutes = (
+            record["started_at"] -
+            record["created_at"]
+        ).total_seconds() / 60
+
+        print(
+            "people_ahead:", record["people_ahead"],
+            "| consultation:", round(consultation_minutes, 2),
+            "| waiting:", round(waiting_minutes, 2)
+        )
+
+    print("============================\n")
+
+    # ========================================================
+    # TRAIN MODEL
+    # ========================================================
+
+    trained = train_model(training_records)
+
+    if not trained:
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to train the model with the available data"
+        )
+
+    return {
+        "message": "Waiting-time model trained successfully",
+        "training_records": len(training_records)
+    }
+
+
+# ============================================================
+# AI WAITING-TIME PREDICTION
+# ============================================================
+
+@app.get("/queue/predict-wait-time")
+def get_waiting_time_prediction(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != "PATIENT":
+        raise HTTPException(
+            status_code=403,
+            detail="Only patients can request waiting-time predictions"
+        )
+
+    patient = db.query(models.Patient).filter(
+        models.Patient.user_id == current_user.id
+    ).first()
+
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient profile not found"
+        )
+
+    queue = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.patient_id == patient.id,
+            models.Queue.status.in_([
+                "WAITING",
+                "CALLED",
+                "IN_PROGRESS"
+            ])
+        )
+        .order_by(
+            models.Queue.created_at.desc()
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=404,
+            detail="No active queue found"
+        )
+
+    appointment = queue.appointment
+    doctor_id = appointment.doctor_id
+
+    # ========================================================
+    # Calculate people ahead
+    # ========================================================
+
+    people_ahead = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.doctor_id == doctor_id,
+            models.Queue.status.in_([
+                "WAITING",
+                "CALLED",
+                "IN_PROGRESS"
+            ]),
+            models.Queue.queue_number < queue.queue_number
+        )
+        .count()
+    )
+
+    # ========================================================
+    # Calculate doctor's average consultation duration
+    # ========================================================
+
+    completed_queues = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.doctor_id == doctor_id,
+            models.Queue.status == "COMPLETED",
+            models.Queue.started_at.isnot(None),
+            models.Queue.completed_at.isnot(None)
+        )
+        .all()
+    )
+
+    consultation_times = []
+
+    for completed_queue in completed_queues:
+
+        duration = (
+            completed_queue.completed_at
+            - completed_queue.started_at
+        ).total_seconds() / 60
+
+        if duration > 0:
+            consultation_times.append(duration)
+
+    # Use historical average.
+    # If there is no history, use 10 minutes.
+    if consultation_times:
+        average_consultation = (
+            sum(consultation_times)
+            / len(consultation_times)
+        )
+    else:
+        average_consultation = 10.0
+
+    # ========================================================
+    # Prediction
+    # ========================================================
+
+    now = datetime.utcnow()
+
+    prediction = predict_waiting_time(
+        people_ahead=people_ahead,
+        hour=now.hour,
+        day_of_week=now.weekday(),
+        consultation_minutes=average_consultation
+    )
+
+    # If the model doesn't exist, use a simple fallback.
+    if prediction is None:
+        prediction = round(
+            people_ahead * average_consultation
+        )
+
+        model_status = "fallback"
+
+    else:
+        model_status = "ml_model"
+
+    return {
+        "queue_id": queue.id,
+        "queue_number": queue.queue_number,
+        "people_ahead": people_ahead,
+        "estimated_wait_minutes": prediction,
+        "average_consultation_minutes": round(
+            average_consultation,
+            1
+        ),
+        "model_status": model_status
+    }
+# ============================================================
+# AI WAITING-TIME PREDICTION
+# ============================================================
+
+@app.get("/queue/predict-wait-time")
+def get_waiting_time_prediction(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.role != "PATIENT":
+        raise HTTPException(
+            status_code=403,
+            detail="Only patients can request waiting-time predictions"
+        )
+
+    patient = db.query(models.Patient).filter(
+        models.Patient.user_id == current_user.id
+    ).first()
+
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient profile not found"
+        )
+
+    queue = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.patient_id == patient.id,
+            models.Queue.status.in_([
+                "WAITING",
+                "CALLED",
+                "IN_PROGRESS"
+            ])
+        )
+        .order_by(
+            models.Queue.created_at.desc()
+        )
+        .first()
+    )
+
+    if not queue:
+        raise HTTPException(
+            status_code=404,
+            detail="No active queue found"
+        )
+
+    appointment = queue.appointment
+    doctor_id = appointment.doctor_id
+
+    # --------------------------------------------------------
+    # Calculate people ahead
+    # --------------------------------------------------------
+
+    people_ahead = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.doctor_id == doctor_id,
+            models.Queue.status.in_([
+                "WAITING",
+                "CALLED",
+                "IN_PROGRESS"
+            ]),
+            models.Queue.queue_number < queue.queue_number
+        )
+        .count()
+    )
+
+    # --------------------------------------------------------
+    # Calculate doctor's average consultation duration
+    # --------------------------------------------------------
+
+    completed_queues = (
+        db.query(models.Queue)
+        .join(models.Appointment)
+        .filter(
+            models.Appointment.doctor_id == doctor_id,
+            models.Queue.status == "COMPLETED",
+            models.Queue.started_at.isnot(None),
+            models.Queue.completed_at.isnot(None)
+        )
+        .all()
+    )
+
+    consultation_times = []
+
+    for completed_queue in completed_queues:
+
+        duration = (
+            completed_queue.completed_at
+            - completed_queue.started_at
+        ).total_seconds() / 60
+
+        if duration > 0:
+            consultation_times.append(duration)
+
+    # Use the doctor's historical average.
+    # If there is not enough history yet,
+    # use a reasonable initial estimate.
+    if consultation_times:
+        average_consultation = (
+            sum(consultation_times)
+            / len(consultation_times)
+        )
+    else:
+        average_consultation = 10.0
+
+    # --------------------------------------------------------
+    # Prediction
+    # --------------------------------------------------------
+
+    now = datetime.utcnow()
+
+    prediction = predict_waiting_time(
+        people_ahead=people_ahead,
+        hour=now.hour,
+        day_of_week=now.weekday(),
+        consultation_minutes=average_consultation
+    )
+
+    # The model may not exist yet.
+    if prediction is None:
+
+        # Simple fallback until enough historical
+        # data exists to train the ML model.
+        prediction = round(
+            people_ahead * average_consultation
+        )
+
+        model_status = "fallback"
+
+    else:
+        model_status = "ml_model"
+
+    return {
+        "queue_id": queue.id,
+        "queue_number": queue.queue_number,
+        "people_ahead": people_ahead,
+        "estimated_wait_minutes": prediction,
+        "average_consultation_minutes": round(
+            average_consultation,
+            1
+        ),
+        "model_status": model_status
     }
