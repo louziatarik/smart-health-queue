@@ -12,11 +12,13 @@ from . import models
 from .schemas import (
     PatientRegister,
     PatientLogin,
+    PatientProfileUpdate,
     DoctorRegister,
     AppointmentCreate,
     AppointmentResponse,
     DoctorResponse
 )
+
 from .auth import create_access_token, decode_access_token
 from .ai_model import train_model, predict_waiting_time
 
@@ -301,15 +303,70 @@ def get_current_user(
 
 @app.get("/patients/me")
 def get_my_profile(
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
+    if current_user.role != "PATIENT":
+        raise HTTPException(
+            status_code=403,
+            detail="Only patients can view their profile"
+        )
+
+    patient = db.query(models.Patient).filter(
+        models.Patient.user_id == current_user.id
+    ).first()
+
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient profile not found"
+        )
+
     return {
         "user_id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
-        "role": current_user.role
+        "role": current_user.role,
+        "phone": patient.phone,
+        "date_of_birth": patient.date_of_birth
     }
+@app.put("/patients/me")
+def update_my_profile(
+    profile_data: PatientProfileUpdate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    patient = (
+        db.query(models.Patient)
+        .filter(models.Patient.user_id == current_user.id)
+        .first()
+    )
 
+    if not patient:
+        raise HTTPException(
+            status_code=404,
+            detail="Patient profile not found."
+        )
+
+    # Update user information
+    current_user.name = profile_data.name
+
+    # Update patient information
+    patient.phone = profile_data.phone
+    patient.date_of_birth = profile_data.date_of_birth
+
+    db.commit()
+    db.refresh(current_user)
+    db.refresh(patient)
+
+    return {
+        "user_id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "role": current_user.role,
+        "phone": patient.phone,
+        "date_of_birth": patient.date_of_birth
+    }
 
 # ============================================================
 # DOCTOR REGISTRATION

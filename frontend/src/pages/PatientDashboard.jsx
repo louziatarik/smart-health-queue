@@ -333,7 +333,22 @@ function PatientDashboard() {
     queue?.status ||
     queue?.queue_status ||
     "No active queue";
+  const peopleAhead =
+    queue?.people_ahead ?? 0;
 
+  const estimatedWait =
+    queue?.estimated_waiting_time ??
+    queue?.predicted_waiting_time ??
+    queue?.waiting_time ??
+    null;
+
+  const queueDoctor =
+    queue?.doctor_specialization ||
+    "Healthcare";
+
+  const queueDepartment =
+    queue?.department ||
+    "";
   return (
     <div className="patient-dashboard">
 
@@ -391,7 +406,7 @@ function PatientDashboard() {
           </a>
 
           <a
-            href="#profile"
+            href="/profile"
             className="dashboard-nav-item"
           >
             <span>♙</span>
@@ -688,7 +703,7 @@ function PatientDashboard() {
 
               </div>
 
-              {/* =============================
+                            {/* =============================
                   LIVE QUEUE
               ============================== */}
 
@@ -709,68 +724,146 @@ function PatientDashboard() {
                     </h2>
                   </div>
 
-                  <span className="queue-live-badge">
-                    ● Live
-                  </span>
+                  {queue && (
+                    <span className="queue-live-badge">
+                      ● Live
+                    </span>
+                  )}
 
                 </div>
 
-                <div className="big-queue-number">
-                  {queueNumber !== "—"
-                    ? `#${queueNumber}`
-                    : "—"}
-                </div>
+                {queue ? (
+                  <>
+                    <div className="queue-main-display">
 
-                <p className="queue-position-label">
-                  Current position
-                </p>
+                      <div>
+                        <span className="queue-number-label">
+                          YOUR NUMBER
+                        </span>
 
-                <div className="queue-details">
+                        <div className="big-queue-number">
+                          #{queueNumber}
+                        </div>
 
-                  <div className="queue-detail-item">
+                        <p className="queue-position-label">
+                          Current position in queue
+                        </p>
+                      </div>
 
-                    <span>
-                      Status
-                    </span>
+                      <div className="queue-wait-card">
 
-                    <strong
-                      className={`queue-status-${queueStatus.toLowerCase()}`}
-                    >
-                      {queueStatus}
-                    </strong>
+                        <span>
+                          ESTIMATED WAIT
+                        </span>
 
-                  </div>
+                        <strong>
+                          {estimatedWait !== null
+                            ? `${estimatedWait} min`
+                            : "Calculating..."}
+                        </strong>
 
-                  <div className="queue-detail-item">
+                        <small>
+                          AI-powered estimate
+                        </small>
 
-                    <span>
-                      Patients ahead
-                    </span>
+                      </div>
 
-                    <strong>
-                      {queue?.people_ahead ??
-                        "—"}
-                    </strong>
+                    </div>
 
-                  </div>
+                    <div className="queue-details">
 
-                  <div className="queue-detail-item">
+                      <div className="queue-detail-item">
 
-                    <span>
-                      Appointment
-                    </span>
+                        <span>
+                          Status
+                        </span>
 
-                    <strong>
-                      {queue
-                        ? formatTime(
+                        <strong
+                          className={`queue-status-${queueStatus.toLowerCase()}`}
+                        >
+                          {queueStatus}
+                        </strong>
+
+                      </div>
+
+                      <div className="queue-detail-item">
+
+                        <span>
+                          Patients ahead
+                        </span>
+
+                        <strong>
+                          {peopleAhead}
+                        </strong>
+
+                      </div>
+
+                      <div className="queue-detail-item">
+
+                        <span>
+                          Appointment
+                        </span>
+
+                        <strong>
+                          {formatTime(
                             queue.appointment_time
-                          )
-                        : "—"}
+                          )}
+                        </strong>
+
+                      </div>
+
+                    </div>
+
+                    <div className="queue-doctor-info">
+
+                      <div className="queue-doctor-icon">
+                        +
+                      </div>
+
+                      <div>
+                        <span>
+                          Your appointment
+                        </span>
+
+                        <strong>
+                          {queueDoctor}
+                        </strong>
+
+                        {queueDepartment && (
+                          <small>
+                            {queueDepartment}
+                          </small>
+                        )}
+                      </div>
+
+                    </div>
+
+                  </>
+                ) : (
+                  <div className="empty-state">
+
+                    <div>
+                      #
+                    </div>
+
+                    <strong>
+                      No active queue
                     </strong>
 
-                  </div>
+                    <span>
+                      When you book an appointment,
+                      your queue position will appear here.
+                    </span>
 
-                </div>
+                    <Link
+                      to="/book-appointment"
+                      className="empty-book-button"
+                    >
+                      Book an appointment →
+                    </Link>
+
+                  </div>
+                                )}
 
               </div>
 
@@ -924,75 +1017,7 @@ function PatientDashboard() {
                 PROFILE
             ================================================= */}
 
-            <section
-              className="patient-panel profile-panel"
-              id="profile"
-            >
-
-              <div className="panel-header">
-
-                <div>
-                  <span>
-                    ACCOUNT
-                  </span>
-
-                  <h2>
-                    My profile
-                  </h2>
-                </div>
-
-              </div>
-
-              <div className="profile-grid">
-
-                <div>
-                  <span>
-                    Full name
-                  </span>
-
-                  <strong>
-                    {profile?.name ||
-                      "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    Email
-                  </span>
-
-                  <strong>
-                    {profile?.email ||
-                      "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    Phone
-                  </span>
-
-                  <strong>
-                    {profile?.phone ||
-                      "—"}
-                  </strong>
-                </div>
-
-                <div>
-                  <span>
-                    Date of birth
-                  </span>
-
-                  <strong>
-                    {profile?.date_of_birth ||
-                      "—"}
-                  </strong>
-                </div>
-
-              </div>
-
-            </section>
-
+            
           </>
         )}
 

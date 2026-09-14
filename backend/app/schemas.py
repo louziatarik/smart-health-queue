@@ -20,7 +20,14 @@ class PatientRegister(BaseModel):
 class PatientLogin(BaseModel):
     email: EmailStr
     password: str
+# ============================================================
+# PATIENT PROFILE UPDATE
+# ============================================================
 
+class PatientProfileUpdate(BaseModel):
+    name: str
+    phone: str
+    date_of_birth: str
 
 # ============================================================
 # DOCTOR REGISTRATION

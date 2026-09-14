@@ -3,7 +3,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import "./App.css";
 
 import { Routes, Route, Link } from "react-router-dom";
-
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PatientDashboard from "./pages/PatientDashboard";
@@ -639,36 +639,41 @@ function Home() {
 function App() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={<LandingPage />}
-      />
+  <Route
+    path="/"
+    element={<LandingPage />}
+  />
 
-      <Route
-        path="/login"
-        element={<Login />}
-      />
+  <Route
+    path="/login"
+    element={<Login />}
+  />
 
-      <Route
-        path="/register"
-        element={<Register />}
-      />
+  <Route
+    path="/register"
+    element={<Register />}
+  />
 
-      <Route
-        path="/patient-dashboard"
-        element={<PatientDashboard />}
-      />
+  <Route
+    path="/patient-dashboard"
+    element={<PatientDashboard />}
+  />
 
-      <Route
-        path="/book-appointment"
-        element={<BookAppointment />}
-      />
+  <Route
+    path="/book-appointment"
+    element={<BookAppointment />}
+  />
 
-      <Route
-        path="/doctor-dashboard"
-        element={<DoctorDashboard />}
-      />
-    </Routes>
+  <Route
+    path="/doctor-dashboard"
+    element={<DoctorDashboard />}
+  />
+
+  <Route
+    path="/profile"
+    element={<Profile />}
+  />
+</Routes>
   );
 }
 
